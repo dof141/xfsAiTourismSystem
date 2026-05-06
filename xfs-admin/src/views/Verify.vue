@@ -11,13 +11,13 @@
       <div class="scan-area">
         <el-input
             v-model="scanOrderNo"
-            placeholder="请使用扫码枪扫描游客二维码，或手动输入订单号"
+            placeholder="请使用扫码枪扫描游客二维码，或手动输入8位短核销码(如V-A3F8...)"
             size="large"
             clearable
             @keyup.enter="handleVerify"
             class="scan-input"
         >
-          <template #prepend>订单号</template>
+          <template #prepend>订单号或核销码</template>
         </el-input>
         <el-button type="primary" size="large" @click="handleVerify" :loading="loading">
           确认核销

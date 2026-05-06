@@ -3,7 +3,7 @@ package com.xfs.xfsbackend.common;
 
 
 import lombok.Data;
-//统一的请求工具类
+//统一的请求工具类 封装返回的数据和提示
 @Data
 public class Result<T> {
     private Integer code;

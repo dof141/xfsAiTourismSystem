@@ -1,0 +1,23 @@
+server:
+  port: 8080 # 后端服务端口
+
+spring:
+  datasource:
+    # 你的数据库名称 xfs_ai_tourism_system
+    url: jdbc:mysql://127.0.0.1:3306/xfs_ai_tourism_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 20201211
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # Redis 配置
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 在控制台打印SQL
+    map-underscore-to-camel-case: true # 开启驼峰命名转换

@@ -3,6 +3,7 @@ package com.xfs.xfsbackend.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -12,25 +13,44 @@ import java.util.Map;
 @Component
 public class JwtUtils {
 
-    // 密钥，建议生产环境放到配置文件
-    private static final String SECRET = "XFS_SECRET_2026_GRADUATION_PROJECT";
-    // 过期时间：7天
-    private static final long EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+    @Value("${xfs.jwt.secret}")
+    private String secret;
+
+    @Value("${xfs.jwt.expiration}")
+    private long expiration;
 
     /**
-     * 生成令牌
+     * 生成令牌（管理员和游客通用）
      */
-    public String generateToken(Long adminId, String username) {
+    public String generateToken(Long id, String username) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("id", adminId);
+        claims.put("id", id);
         claims.put("username", username);
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256, SECRET)
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(SignatureAlgorithm.HS256, secret)
+                .compact();
+    }
+
+    /**
+     * 生成令牌（带角色信息）
+     */
+    public String generateToken(Long id, String username, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", id);
+        claims.put("username", username);
+        claims.put("role", role);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
 
@@ -39,7 +59,7 @@ public class JwtUtils {
      */
     public Claims parseToken(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET)
+                .setSigningKey(secret)
                 .parseClaimsJws(token)
                 .getBody();
     }

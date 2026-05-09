@@ -48,3 +48,7 @@ xfs:
     api-key: ${AI_API_KEY} # 建议通过环境变量注入${AI_API_KEY:你的apikey}
     api-url: https://api.deepseek.com/chat/completions # DeepSeek 标准接口地址
     model: deepseek-chat
+  # JWT 安全配置
+  jwt:
+    secret: ${JWT_SECRET:XFS_SECRET_2026_GRADUATION_PROJECT_DEFAULT}
+    expiration: 604800000  # 7天 (毫秒)

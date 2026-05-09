@@ -98,6 +98,19 @@
 
 ---
 
+### 8. 修复密码字段无法反序列化
+**提交：** `d41981d`
+**文件：** `xfs-backend/src/main/java/com/xfs/xfsbackend/entity/SysAdmin.java`
+
+**问题：** `@JsonIgnore` 注解同时阻断序列化和反序列化，导致 Spring 接收登录请求时直接跳过 `password` 字段，`loginAdmin.getPassword()` 永远为 null，触发"用户名和密码不能为空"错误。
+
+**修复方案：**
+- 将 `@JsonIgnore` 改为 `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)`
+- `WRITE_ONLY` = 允许从 JSON 输入读取（反序列化），但不输出到 JSON 响应（序列化）
+- 确保登录请求能正确接收密码，同时密码不会出现在 API 响应中
+
+---
+
 ## 注意事项
 
 ### 数据库密码需要更新
@@ -122,3 +135,4 @@ UPDATE sys_admin SET password = '$2a$10$Xi3R0HGIewq22zVaT4x3Ue.JH.hjCHbblLah.K75
 | `d26a274` | 小程序 API 地址从硬编码改为环境变量 |
 | `9839e28` | 抽取公共登录逻辑到 utils/auth.js |
 | `72f59e2` | 登录接口增加参数校验防止空指针 |
+| `d41981d` | 修复 SysAdmin 密码字段反序列化被忽略 |

@@ -2,6 +2,10 @@ server:
   port: 8080 # 后端服务端口
 
 spring:
+  # 解决 Knife4j/Springfox 与 Spring Boot 2.7 的兼容问题
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   datasource:
     # 你的数据库名称 xfs_ai_tourism_system
     url: jdbc:mysql://127.0.0.1:3306/xfs_ai_tourism_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false

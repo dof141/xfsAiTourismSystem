@@ -89,7 +89,10 @@ const handleSend = async () => {
 	scrollToBottom();
 
 	try {
-		const data = await api.aiChat(text);
+		const history = messages.value
+			.filter(m => m.content !== '您好！我是雪峰山专属导览助手，您可以问我任何关于景区、美食、路线的问题。')
+			.map(m => ({ role: m.role, content: m.content }));
+		const data = await api.aiChat(text, history);
 		messages.value.push({ role: 'ai', content: data });
 	} catch (e) {
 		messages.value.push({ role: 'ai', content: e.msg || '连接失败，请稍后再试' });

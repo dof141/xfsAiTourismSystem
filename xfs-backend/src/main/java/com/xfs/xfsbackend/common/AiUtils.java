@@ -40,11 +40,12 @@ public class AiUtils {
             "要求：语气亲切、热情、专业。如果用户的问题与旅游或雪峰山完全无关，请礼貌地引导用户回到旅游话题。";
 
     /**
-     * 调用大模型接口 (真实版)
+     * 调用大模型接口 (支持多轮对话)
      * @param question 用户的提问
+     * @param history 对话历史（可为null）
      * @return AI 的回答
      */
-    public String getAiAnswer(String question) {
+    public String getAiAnswer(String question, List<QuestionDTO.ChatMessage> history) {
         log.info("开始调用 AI 接口，提问内容: {}", question);
 
         // 如果没有配置 Key，返回提示（防止报错导致系统崩溃）
@@ -52,26 +53,43 @@ public class AiUtils {
             return "【系统提示】AI 接口密钥尚未配置，请联系管理员在 application.yml 中配置 API Key。目前为您开启模拟回答模式：雪峰山欢迎您！这里景色优美，适合避暑。";
         }
 
+        // 输入长度限制
+        if (question.length() > 500) {
+            return "问题太长啦，请精简到500字以内。";
+        }
+
         try {
             // 1. 构建请求消息体 (OpenAI 标准格式)
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", model);
-            
+
             List<Map<String, String>> messages = new ArrayList<>();
             // 添加系统提示词
             Map<String, String> systemMsg = new HashMap<>();
             systemMsg.put("role", "system");
             systemMsg.put("content", SYSTEM_PROMPT);
             messages.add(systemMsg);
-            
-            // 添加用户问题
+
+            // 添加对话历史（最多保留最近10轮）
+            if (history != null && !history.isEmpty()) {
+                int start = Math.max(0, history.size() - 20);
+                for (int i = start; i < history.size(); i++) {
+                    QuestionDTO.ChatMessage msg = history.get(i);
+                    Map<String, String> historyMsg = new HashMap<>();
+                    historyMsg.put("role", "user".equals(msg.getRole()) ? "user" : "assistant");
+                    historyMsg.put("content", msg.getContent());
+                    messages.add(historyMsg);
+                }
+            }
+
+            // 添加当前用户问题
             Map<String, String> userMsg = new HashMap<>();
             userMsg.put("role", "user");
             userMsg.put("content", question);
             messages.add(userMsg);
-            
+
             requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7); // 适中的创造力
+            requestBody.put("temperature", 0.7);
 
             // 2. 发送 POST 请求 (使用 Hutool)
             String jsonResult = HttpRequest.post(apiUrl)

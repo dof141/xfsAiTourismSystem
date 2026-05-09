@@ -97,7 +97,11 @@ const sendMessage = async () => {
   scrollToBottom()
 
   try {
-    const res = await request.post('/ai/chat', { text: text })
+    // 构建对话历史（排除欢迎消息和当前问题）
+    const history = messageList.value
+      .filter(m => m.content !== '您好！我是雪峰山专属导览助手，很高兴为您服务。请问有什么可以帮您的吗？')
+      .map(m => ({ role: m.role, content: m.content }))
+    const res = await request.post('/ai/chat', { text, history })
     messageList.value.push({ role: 'ai', content: res.data })
   } catch (error) {
     console.error(error)

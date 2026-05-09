@@ -31,8 +31,8 @@ public class AiController {
             return Result.error("您还没有输入任何问题哦！");
         }
 
-        // 3. 调用 AI 工具类获取回答
-        String answer = aiUtils.getAiAnswer(questionText);
+        // 3. 调用 AI 工具类获取回答（传入对话历史）
+        String answer = aiUtils.getAiAnswer(questionText, questionDTO.getHistory());
 
         // 4. 返回结果给前端
         return Result.success(answer);

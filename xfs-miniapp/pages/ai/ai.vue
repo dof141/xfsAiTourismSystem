@@ -68,8 +68,11 @@ const send = async () => {
 	updateScroll();
 
 	try {
-		// 2. 调用后端接口 (使用封装好的 api 对象)
-		const data = await api.aiChat(text);
+		// 2. 调用后端接口，传入对话历史实现多轮对话
+		const history = messages.value
+			.filter(m => m.content !== '您好！我是雪峰山专属导览助手"雪峰百事通"，关于穿岩山、大花瑶、阳雀坡等景区的问题，尽管问我吧！')
+			.map(m => ({ role: m.role, content: m.content }));
+		const data = await api.aiChat(text, history);
 		messages.value.push({ role: 'ai', content: data });
 	} catch (e) {
 		console.error('AI聊天失败:', e);

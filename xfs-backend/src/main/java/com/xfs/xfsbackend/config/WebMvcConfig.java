@@ -26,7 +26,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/area/list",
                         "/api/area/hot",
                         "/api/area/{id}/spots",
-                        "/api/ai/**"
+                        "/api/ai/**",
+                        "/doc.html",
+                        "/webjars/**",
+                        "/swagger-resources/**",
+                        "/v3/api-docs/**"
                 );
 
         // 2. 管理员角色拦截器（在登录拦截器之后执行）

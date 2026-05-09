@@ -46,24 +46,24 @@
 
     <!-- 1. 新增/编辑大景区 弹窗 -->
     <el-dialog v-model="areaDialogVisible" :title="areaForm.id ? '编辑景区' : '新增大景区'" width="600px" border-radius="20px">
-      <el-form :model="areaForm" label-width="100px" class="modern-form">
-        <el-form-item label="景区名称">
+      <el-form ref="areaFormRef" :model="areaForm" :rules="areaRules" label-width="100px" class="modern-form">
+        <el-form-item label="景区名称" prop="name">
           <el-input v-model="areaForm.name" placeholder="请输入名称" />
         </el-form-item>
-        <el-form-item label="景区等级">
+        <el-form-item label="景区等级" prop="level">
           <el-select v-model="areaForm.level" placeholder="请选择">
             <el-option label="5A" value="AAAAA" />
             <el-option label="4A" value="AAAA" />
             <el-option label="3A" value="AAA" />
           </el-select>
         </el-form-item>
-        <el-form-item label="地理位置">
+        <el-form-item label="地理位置" prop="address">
           <el-input v-model="areaForm.address" placeholder="例如：怀化市溆浦县" />
         </el-form-item>
         <el-form-item label="咨询电话">
           <el-input v-model="areaForm.tel" />
         </el-form-item>
-        <el-form-item label="景区简介">
+        <el-form-item label="景区简介" prop="intro">
           <el-input v-model="areaForm.intro" type="textarea" rows="4" />
         </el-form-item>
         <el-form-item label="封面图URL">
@@ -106,17 +106,17 @@
 
     <!-- 3. 新增/编辑子景点 弹窗 -->
     <el-dialog v-model="spotDialogVisible" title="子景点编辑" width="550px" append-to-body>
-      <el-form :model="spotForm" label-width="100px" class="modern-form">
-        <el-form-item label="景点名称">
+      <el-form ref="spotFormRef" :model="spotForm" :rules="spotRules" label-width="100px" class="modern-form">
+        <el-form-item label="景点名称" prop="name">
           <el-input v-model="spotForm.name" placeholder="请输入子景点名称" />
         </el-form-item>
-        <el-form-item label="门票价格">
+        <el-form-item label="门票价格" prop="price">
           <el-input-number v-model="spotForm.price" :precision="2" :step="1" :min="0" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="开放时间">
+        <el-form-item label="开放时间" prop="openTime">
           <el-input v-model="spotForm.openTime" placeholder="如：08:00 - 18:00" />
         </el-form-item>
-        <el-form-item label="景点简介">
+        <el-form-item label="景点简介" prop="intro">
           <el-input v-model="spotForm.intro" type="textarea" rows="3" placeholder="简要描述景点的特色" />
         </el-form-item>
         <el-form-item label="景点图片URL">
@@ -142,7 +142,21 @@ const tableData = ref([])
 const loading = ref(false)
 const areaDialogVisible = ref(false)
 const submitting = ref(false)
+const areaFormRef = ref(null)
+const spotFormRef = ref(null)
 const areaForm = ref({ id: null, name: '', level: '', address: '', tel: '', intro: '', coverImg: '' })
+const areaRules = {
+  name: [{ required: true, message: '请输入景区名称', trigger: 'blur' }],
+  level: [{ required: true, message: '请选择景区等级', trigger: 'change' }],
+  address: [{ required: true, message: '请输入地理位置', trigger: 'blur' }],
+  intro: [{ required: true, message: '请输入景区简介', trigger: 'blur' }]
+}
+const spotRules = {
+  name: [{ required: true, message: '请输入景点名称', trigger: 'blur' }],
+  price: [{ required: true, message: '请设置门票价格', trigger: 'change' }],
+  openTime: [{ required: true, message: '请输入开放时间', trigger: 'blur' }],
+  intro: [{ required: true, message: '请输入景点简介', trigger: 'blur' }]
+}
 
 const fetchAreaList = async () => {
   loading.value = true
@@ -160,6 +174,10 @@ const openAreaDialog = (row = null) => {
 }
 
 const handleSaveArea = async () => {
+  if (!areaFormRef.value) return
+  try {
+    await areaFormRef.value.validate()
+  } catch { return }
   submitting.value = true
   try {
     await request.post('/area/save', areaForm.value)
@@ -208,6 +226,10 @@ const openSpotDialog = (row = null) => {
 }
 
 const handleSaveSpot = async () => {
+  if (!spotFormRef.value) return
+  try {
+    await spotFormRef.value.validate()
+  } catch { return }
   try {
     await request.post('/area/spot/save', spotForm.value)
     ElMessage.success('保存成功')

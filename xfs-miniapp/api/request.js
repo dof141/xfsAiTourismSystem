@@ -76,8 +76,8 @@ export const api = {
   myReserveList: () => get('/api/reserve/myList'),
   getQrCode: (orderNo) => get(`/api/reserve/qrcode/${orderNo}`),
 
-  // AI（超时设为60秒，大模型响应较慢）
-  aiChat: (text) => post('/api/ai/chat', { text }, { timeout: 60000 }),
+  // AI（超时设为60秒，大模型响应较慢，支持多轮对话）
+  aiChat: (text, history) => post('/api/ai/chat', { text, history }, { timeout: 60000 }),
 
   // 子景点
   spotListByArea: (areaId) => get(`/api/area/${areaId}/spots`),

@@ -3,8 +3,8 @@
 	<view class="header" style="display: flex; justify-content: space-between; align-items: center;">
 	      <text class="title">🏔️ 雪峰山智慧导览</text>
 	      <view style="display: flex; gap: 24rpx;">
-	        <text style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</text>
-	        <text style="color: #6366f1; font-size: 28rpx;" @click="goToProfile">个人中心</text>
+	        <view style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</view>
+	        <view style="color: #6366f1; font-size: 28rpx;" @click="goToProfile">个人中心</view>
 	      </view>
 	    </view>
 

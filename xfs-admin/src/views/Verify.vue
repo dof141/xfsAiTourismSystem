@@ -85,11 +85,15 @@ const handleVerify = async () => {
   
   try {
     const res = await request.post(`/reserve/verify/${scanOrderNo.value}`)
-    verifyResult.value = { type: 'success', title: '核销成功', msg: '订单已验证，准予入园' }
-    ElMessage.success('核销成功')
+    if (res.code === 200) {
+      verifyResult.value = { type: 'success', title: '核销成功', msg: res.data || '订单已验证，准予入园' }
+      ElMessage.success('核销成功')
+      scanOrderNo.value = ''
+    } else {
+      verifyResult.value = { type: 'error', title: '核销失败', msg: res.msg || '核销失败' }
+    }
   } catch (error) {
-    const msg = error?.response?.data?.msg || error?.msg || '核销请求失败'
-    verifyResult.value = { type: 'error', title: '核销失败', msg }
+    verifyResult.value = { type: 'error', title: '核销失败', msg: '网络请求失败，请重试' }
   } finally {
     loading.value = false
   }

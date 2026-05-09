@@ -65,15 +65,11 @@
 
     <!-- 底部操作条 -->
     <view class="bottom-bar">
-      <view class="chat-btn" @click="openAi">
-        <text class="icon">🤖</text>
-        <text>问导游</text>
-      </view>
       <button class="reserve-btn" @click="handleReserve">立即预约门票</button>
     </view>
 	
 	<!-- 全局 AI 助手 -->
-	<AiAssistant ref="aiRef" />
+	<AiAssistant />
   </view>
 </template>
 
@@ -86,7 +82,6 @@ import AiAssistant from '@/components/AiAssistant.vue'
 
 const areaData = ref({})
 const spotList = ref([])
-const aiRef = ref(null)
 
 onLoad(async (options) => {
   if (options.data) {
@@ -115,12 +110,6 @@ const proceedToReserve = () => {
   })
 }
 
-const openAi = () => {
-  // 触发全局 AI 组件的显示逻辑
-  if (aiRef.value) {
-    aiRef.value.toggleChat()
-  }
-}
 </script>
 
 <style lang="scss">
@@ -338,16 +327,6 @@ page {
   box-sizing: border-box;
   box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
   z-index: 1000;
-  
-  .chat-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-right: 40rpx;
-    color: #64748b;
-    font-size: 20rpx;
-    .icon { font-size: 40rpx; margin-bottom: 4rpx; }
-  }
   
   .reserve-btn {
     flex: 1;

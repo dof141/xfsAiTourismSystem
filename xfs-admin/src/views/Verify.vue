@@ -50,14 +50,13 @@
           </div>
         </transition>
 
-        <!-- 最近核销记录 (模拟) -->
+        <!-- 核销提示 -->
         <div class="recent-verify">
-          <div class="recent-title">最近核销</div>
+          <div class="recent-title">操作提示</div>
           <div class="recent-list">
             <div class="recent-item">
-              <span class="time">14:20:05</span>
-              <span class="code">V-A3F8B2C9</span>
-              <span class="status success">成功</span>
+              <span class="time">提示</span>
+              <span class="code">输入订单号或扫描二维码即可完成核销</span>
             </div>
           </div>
         </div>

@@ -1,15 +1,15 @@
 <template>
   <div class="modern-page-container">
     <div class="chat-layout">
-      <!-- 左侧：对话列表 (模拟) -->
+      <!-- 左侧：AI 助手信息 -->
       <div class="white-card chat-sidebar">
-        <div class="sidebar-header">最近咨询</div>
+        <div class="sidebar-header">AI 导览助手</div>
         <div class="contact-list">
           <div class="contact-item active">
             <div class="avatar">🤖</div>
             <div class="info">
               <div class="name">雪峰百事通</div>
-              <div class="last-msg">为您提供专业导览...</div>
+              <div class="last-msg">在线为您服务</div>
             </div>
           </div>
         </div>

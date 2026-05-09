@@ -41,26 +41,26 @@
       </div>
     </div>
 
-    <!-- 3. 底部：状态监控 -->
+    <!-- 3. 底部：系统说明 -->
     <div class="white-card system-status">
       <div class="card-header">
-        <span class="title">🛡️ 智慧系统运行状态</span>
+        <span class="title">🛡️ 系统技术架构</span>
       </div>
       <div class="status-list">
         <div class="status-item">
           <span class="dot online"></span>
           <span class="name">AI 导览引擎</span>
-          <span class="state">运行中 (延迟: 45ms)</span>
+          <span class="state">基于大语言模型</span>
         </div>
         <div class="status-item">
           <span class="dot online"></span>
           <span class="name">Redis 票务库存</span>
-          <span class="state">已预热 (可用率: 100%)</span>
+          <span class="state">原子扣减防超卖</span>
         </div>
         <div class="status-item">
           <span class="dot online"></span>
-          <span class="name">二维码核销集群</span>
-          <span class="state">负载均衡中</span>
+          <span class="name">二维码核销</span>
+          <span class="state">ZXing 动态生成</span>
         </div>
       </div>
     </div>
@@ -71,6 +71,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as echarts from 'echarts'
 import request from '../utils/request'
+import { ElMessage } from 'element-plus'
 import { User, Tickets, Connection, PieChart } from '@element-plus/icons-vue'
 
 const timeRange = ref('7D')
@@ -94,7 +95,7 @@ const fetchCardData = async () => {
     cards.value[1].value = d.totalVisitors
     cards.value[2].value = d.areaCount
     cards.value[3].value = d.verifyRate.replace('%', '')
-  } catch (e) {}
+  } catch (e) { ElMessage.error('获取统计数据失败') }
 }
 
 const initCharts = async () => {

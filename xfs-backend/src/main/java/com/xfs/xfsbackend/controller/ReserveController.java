@@ -2,6 +2,7 @@ package com.xfs.xfsbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xfs.xfsbackend.common.Result;
+import com.xfs.xfsbackend.config.AdminRequired;
 import com.xfs.xfsbackend.entity.ReserveRecord;
 import com.xfs.xfsbackend.entity.TimeSlot;
 import com.xfs.xfsbackend.service.ReserveRecordService;
@@ -55,6 +56,7 @@ public class ReserveController {
     /**
      * 后端管理员扫描二维码或输入代码进行核销
      */
+    @AdminRequired
     @PostMapping("/verify/{code}")
     public Result<String> verifyOrder(@PathVariable String code) {
         QueryWrapper<ReserveRecord> wrapper = new QueryWrapper<>();
@@ -111,8 +113,9 @@ public class ReserveController {
     }
 
     /**
-     * 缓存预热接口
+     * 缓存预热接口（仅管理员）
      */
+    @AdminRequired
     @GetMapping("/initStock")
     public Result<String> initStock(@RequestParam(required = false) String date) {
         if (date == null || date.isEmpty()) {

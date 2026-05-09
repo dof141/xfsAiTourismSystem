@@ -2,6 +2,7 @@ package com.xfs.xfsbackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xfs.xfsbackend.common.Result;
+import com.xfs.xfsbackend.config.AdminRequired;
 import com.xfs.xfsbackend.entity.ScenicArea;
 import com.xfs.xfsbackend.entity.ScenicSpot;
 import com.xfs.xfsbackend.service.ScenicAreaService;
@@ -33,6 +34,7 @@ public class ScenicAreaController {
     /**
      * 保存或更新景区
      */
+    @AdminRequired
     @PostMapping("/save")
     public Result<String> saveArea(@RequestBody ScenicArea area) {
         scenicAreaService.saveOrUpdate(area);
@@ -42,6 +44,7 @@ public class ScenicAreaController {
     /**
      * 删除景区
      */
+    @AdminRequired
     @DeleteMapping("/{id}")
     public Result<String> deleteArea(@PathVariable Long id) {
         scenicAreaService.removeById(id);
@@ -62,6 +65,7 @@ public class ScenicAreaController {
     /**
      * 保存或更新子景点
      */
+    @AdminRequired
     @PostMapping("/spot/save")
     public Result<String> saveSpot(@RequestBody ScenicSpot spot) {
         scenicSpotService.saveOrUpdate(spot);
@@ -71,6 +75,7 @@ public class ScenicAreaController {
     /**
      * 删除子景点
      */
+    @AdminRequired
     @DeleteMapping("/spot/{id}")
     public Result<String> deleteSpot(@PathVariable Long id) {
         scenicSpotService.removeById(id);

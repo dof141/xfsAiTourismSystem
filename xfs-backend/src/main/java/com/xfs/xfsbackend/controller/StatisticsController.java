@@ -1,6 +1,7 @@
 package com.xfs.xfsbackend.controller;
 
 import com.xfs.xfsbackend.common.Result;
+import com.xfs.xfsbackend.config.AdminRequired;
 import com.xfs.xfsbackend.service.ReserveRecordService;
 import com.xfs.xfsbackend.service.ScenicAreaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ public class StatisticsController {
     /**
      * 获取大屏顶部的四个核心指标卡片数据
      */
+    @AdminRequired
     @GetMapping("/cards")
     public Result<Map<String, Object>> getStatCards() {
         Map<String, Object> map = new HashMap<>();
@@ -54,6 +56,7 @@ public class StatisticsController {
     /**
      * 获取景区热度排行数据 (饼图)
      */
+    @AdminRequired
     @GetMapping("/areaHeat")
     public Result<List<Map<String, Object>>> getAreaHeat() {
         // 这里真实逻辑应该是聚合查询，现在先查出景区列表模拟数据
@@ -72,6 +75,7 @@ public class StatisticsController {
     /**
      * 获取最近7天的预约趋势 (折线图)
      */
+    @AdminRequired
     @GetMapping("/trend")
     public Result<Map<String, Object>> getTrend() {
         Map<String, Object> map = new HashMap<>();

@@ -156,7 +156,7 @@ CREATE TABLE `sys_admin`  (
 -- ----------------------------
 -- Records of sys_admin
 -- ----------------------------
-INSERT INTO `sys_admin` VALUES (1, 'admin', '123456', 'admin', '2026-05-01 11:00:24');
+INSERT INTO `sys_admin` VALUES (1, 'admin', '$2a$10$Xi3R0HGIewq22zVaT4x3Ue.JH.hjCHbblLah.K75KV..JbUzN1aTK', 'admin', '2026-05-01 11:00:24');
 
 -- ----------------------------
 -- Table structure for sys_log

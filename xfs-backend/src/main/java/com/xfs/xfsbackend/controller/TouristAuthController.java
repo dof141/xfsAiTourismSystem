@@ -34,8 +34,8 @@ public class TouristAuthController {
         }
 
         // 模拟用户ID，实际项目中这里应该查数据库或创建新用户
-        Long touristId = 888L; 
-        String token = jwtUtils.generateToken(touristId, "Tourist_" + phone.substring(7));
+        Long touristId = 888L;
+        String token = jwtUtils.generateToken(touristId, "Tourist_" + phone.substring(7), "tourist");
 
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);

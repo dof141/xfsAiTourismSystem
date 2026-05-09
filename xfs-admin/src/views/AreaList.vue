@@ -212,7 +212,7 @@ const handleSaveSpot = async () => {
     ElMessage.success('保存成功')
     spotDialogVisible.value = false
     fetchSpotList()
-  } catch (e) {}
+  } catch (e) { ElMessage.error('保存失败') }
 }
 
 const handleDeleteSpot = async (id) => {
@@ -220,7 +220,7 @@ const handleDeleteSpot = async (id) => {
     await request.delete(`/area/spot/${id}`)
     ElMessage.success('已删除')
     fetchSpotList()
-  } catch (e) {}
+  } catch (e) { ElMessage.error('删除失败') }
 }
 
 onMounted(() => {

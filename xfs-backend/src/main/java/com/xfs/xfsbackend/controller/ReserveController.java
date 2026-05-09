@@ -34,11 +34,12 @@ public class ReserveController {
      */
     @PostMapping("/add")
     public Result<String> addReserve(@RequestBody ReserveRecord record, HttpServletRequest request) {
-        // 尝试从 JWT 拦截器存入的 request 属性中获取用户 ID
+        // 从 JWT 拦截器存入的 request 属性中获取用户 ID
         Object userId = request.getAttribute("adminId");
-        if (userId != null) {
-            record.setTouristId(Long.valueOf(userId.toString()));
+        if (userId == null) {
+            return Result.error("请先登录后再预约");
         }
+        record.setTouristId(Long.valueOf(userId.toString()));
 
         // 调用 Service 核心逻辑
         String msg = reserveRecordService.doReserve(record);
@@ -89,11 +90,11 @@ public class ReserveController {
      */
     @GetMapping("/myList")
     public Result<List<ReserveRecord>> getMyList(HttpServletRequest request) {
-        Long userId = 1L; // 默认值
         Object userIdAttr = request.getAttribute("adminId");
-        if (userIdAttr != null) {
-            userId = Long.valueOf(userIdAttr.toString());
+        if (userIdAttr == null) {
+            return Result.error("请先登录");
         }
+        Long userId = Long.valueOf(userIdAttr.toString());
 
         QueryWrapper<ReserveRecord> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tourist_id", userId).orderByDesc("create_time");

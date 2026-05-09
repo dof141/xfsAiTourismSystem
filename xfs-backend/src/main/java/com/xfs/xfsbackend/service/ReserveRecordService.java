@@ -58,9 +58,8 @@ public class ReserveRecordService extends ServiceImpl<ReserveRecordMapper, Reser
         }
 
         // ====== 5. 扣减成功，执行订单入库逻辑 ======
-        // 如果前端没传 touristId (比如还没做登录)，先默认给 1L 保底，防止数据库报错
         if (record.getTouristId() == null) {
-            record.setTouristId(1L);
+            return "预约失败：用户身份信息缺失，请重新登录";
         }
         // 生成唯一订单号
         record.setOrderNo("XFS" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 4));

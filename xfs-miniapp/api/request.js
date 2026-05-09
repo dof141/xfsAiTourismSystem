@@ -1,7 +1,9 @@
 // 统一请求封装
 
-// 后端地址 — 开发环境用 localhost，上线后改这里就行
-const BASE_URL = 'http://localhost:8080'
+// 后端地址：开发环境用 localhost，生产环境用正式域名
+const BASE_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:8080'
+  : 'https://your-server.com'
 
 /**
  * 封装 uni.request，统一处理 loading、错误提示

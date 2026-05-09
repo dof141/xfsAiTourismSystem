@@ -1,8 +1,8 @@
 package com.xfs.xfsbackend.controller;
 
 import com.xfs.xfsbackend.common.Result;
-
-import com.xfs.xfsbackend.service.SysAdminService;
+import com.xfs.xfsbackend.entity.TouristUser;
+import com.xfs.xfsbackend.service.TouristUserService;
 import com.xfs.xfsbackend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * 游客端登录控制器
@@ -23,24 +24,40 @@ public class TouristAuthController {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private TouristUserService touristUserService;
+
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
+
     /**
-     * 极简登录：仅需手机号即可登录（模拟真实场景）
+     * 极简登录：仅需手机号即可登录
      */
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody Map<String, String> params) {
         String phone = params.get("phone");
-        if (phone == null || phone.length() != 11) {
-            return Result.error("请输入正确的手机号");
+        if (phone == null || !PHONE_PATTERN.matcher(phone).matches()) {
+            return Result.error("请输入正确的11位手机号");
         }
 
-        // 模拟用户ID，实际项目中这里应该查数据库或创建新用户
-        Long touristId = 888L;
-        String token = jwtUtils.generateToken(touristId, "Tourist_" + phone.substring(7), "tourist");
+        // 根据手机号查询或创建游客记录
+        TouristUser tourist = touristUserService.lambdaQuery()
+                .eq(TouristUser::getPhone, phone)
+                .one();
+
+        if (tourist == null) {
+            tourist = new TouristUser();
+            tourist.setPhone(phone);
+            tourist.setNickname("雪峰游客" + phone.substring(7));
+            tourist.setOpenid("phone_" + phone);
+            touristUserService.save(tourist);
+        }
+
+        String token = jwtUtils.generateToken(tourist.getId(), tourist.getNickname(), "tourist");
 
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
-        result.put("touristId", touristId);
-        result.put("nickname", "雪峰游客" + phone.substring(7));
+        result.put("touristId", tourist.getId());
+        result.put("nickname", tourist.getNickname());
 
         return Result.success(result);
     }

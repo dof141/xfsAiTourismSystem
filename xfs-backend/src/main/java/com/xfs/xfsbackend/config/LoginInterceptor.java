@@ -2,6 +2,7 @@ package com.xfs.xfsbackend.config;
 
 import com.xfs.xfsbackend.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -9,6 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+@Slf4j
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
@@ -34,7 +36,7 @@ public class LoginInterceptor implements HandlerInterceptor {
                 return true;
             }
         } catch (Exception e) {
-            // token 校验失败
+            log.warn("token校验失败: {}, URI: {}", e.getMessage(), request.getRequestURI());
         }
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

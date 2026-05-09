@@ -7,11 +7,14 @@ import com.xfs.xfsbackend.entity.TimeSlot;
 import com.xfs.xfsbackend.mapper.ReserveRecordMapper;
 import com.xfs.xfsbackend.mapper.TimeSlotMapper;
 import com.xfs.xfsbackend.utils.QrCodeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+
+@Slf4j
 
 /**
  * 处理预约相关的服务类
@@ -43,12 +46,12 @@ public class ReserveRecordService extends ServiceImpl<ReserveRecordMapper, Reser
             }
             // 初始化 Redis 库存（使用 setIfAbsent 保证原子性，防止并发初始化）
             stringRedisTemplate.opsForValue().setIfAbsent(redisKey, String.valueOf(slot.getMaxPeople()));
-            System.out.println("=== [DEBUG] 自动初始化 Redis 库存: Key=" + redisKey + ", 数量=" + slot.getMaxPeople());
+            log.info("自动初始化Redis库存: Key={}, 数量={}", redisKey, slot.getMaxPeople());
         }
 
         // 3. 执行原子扣减
         Long remainStock = stringRedisTemplate.opsForValue().decrement(redisKey);
-        System.out.println("=== [DEBUG] 执行扣减: Key=" + redisKey + ", 剩余=" + remainStock);
+        log.info("执行扣减: Key={}, 剩余={}", redisKey, remainStock);
 
         // 4. 判断扣减结果
         if (remainStock != null && remainStock < 0) {
@@ -70,7 +73,14 @@ public class ReserveRecordService extends ServiceImpl<ReserveRecordMapper, Reser
         String shortUuid = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         record.setVerifyCode("V-" + shortUuid);
         
-        this.save(record);
-        return "success"; 
+        try {
+            this.save(record);
+        } catch (Exception e) {
+            // 数据库写入失败，回滚Redis库存
+            stringRedisTemplate.opsForValue().increment(redisKey);
+            log.error("订单入库失败，已回滚Redis库存: Key={}", redisKey, e);
+            return "预约失败，请稍后重试";
+        }
+        return "success";
     }
 }

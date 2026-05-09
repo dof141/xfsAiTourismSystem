@@ -28,7 +28,12 @@ public class AdminController {
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody SysAdmin loginAdmin) {
-        // 1. 根据用户名查询
+        // 1. 参数校验
+        if (loginAdmin.getUsername() == null || loginAdmin.getPassword() == null) {
+            return Result.error("用户名和密码不能为空");
+        }
+
+        // 2. 根据用户名查询
         SysAdmin admin = sysAdminService.lambdaQuery()
                 .eq(SysAdmin::getUsername, loginAdmin.getUsername())
                 .one();
@@ -37,7 +42,7 @@ public class AdminController {
             return Result.error("用户名或密码错误");
         }
 
-        // 2. 使用 BCrypt 校验密码
+        // 3. 使用 BCrypt 校验密码
         if (!passwordEncoder.matches(loginAdmin.getPassword(), admin.getPassword())) {
             return Result.error("用户名或密码错误");
         }

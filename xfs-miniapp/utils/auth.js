@@ -48,8 +48,13 @@ function promptLogin(onSuccess) {
     placeholderText: '请输入11位手机号',
     success: async (res) => {
       if (res.confirm && res.content) {
+        const phone = res.content.trim()
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+          uni.showToast({ title: '请输入正确的11位手机号', icon: 'none' })
+          return
+        }
         try {
-          const loginRes = await api.touristLogin(res.content)
+          const loginRes = await api.touristLogin(phone)
           uni.setStorageSync('xfs_token', loginRes.token)
           uni.setStorageSync('tourist_info', JSON.stringify(loginRes))
           uni.showToast({ title: '登录成功' })

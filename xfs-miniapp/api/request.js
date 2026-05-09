@@ -13,6 +13,7 @@ export function request(method, url, data = {}, options = {}) {
     showLoading = false,
     loadingText = '加载中...',
     showError = true,
+    timeout,
   } = options
 
   return new Promise((resolve, reject) => {
@@ -27,13 +28,13 @@ export function request(method, url, data = {}, options = {}) {
       header: {
         'Authorization': 'Bearer ' + (uni.getStorageSync('xfs_token') || '')
       },
-      timeout: 8000,
+      timeout: options.timeout || 15000,
       success: (res) => {
         if (res.data.code === 200) {
           resolve(res.data.data)
         } else if (res.statusCode === 401) {
-            // Token 失效，静默处理或提示
             uni.removeStorageSync('xfs_token')
+            uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
             reject(res.data)
         } else {
           if (showError) {
@@ -75,8 +76,8 @@ export const api = {
   myReserveList: () => get('/api/reserve/myList'),
   getQrCode: (orderNo) => get(`/api/reserve/qrcode/${orderNo}`),
 
-  // AI
-  aiChat: (text) => post('/api/ai/chat', { text }),
+  // AI（超时设为60秒，大模型响应较慢）
+  aiChat: (text) => post('/api/ai/chat', { text }, { timeout: 60000 }),
 
   // 子景点
   spotListByArea: (areaId) => get(`/api/area/${areaId}/spots`),

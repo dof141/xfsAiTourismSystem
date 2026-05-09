@@ -102,7 +102,7 @@ const fetchSpots = async () => {
   try {
     const data = await api.spotListByArea(areaData.value.id)
     spotList.value = data
-  } catch (e) {}
+  } catch (e) { uni.showToast({ title: '景点信息加载失败', icon: 'none' }) }
 }
 
 const handleReserve = () => {

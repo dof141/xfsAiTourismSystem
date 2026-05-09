@@ -3,19 +3,19 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationBarTitleText": "雪峰山智慧导览"
 			}
 		},
 		{
 			"path": "pages/detail/detail",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "景区详情"
 			}
 		},
 		{
 			"path": "pages/reserve/reserve",
 			"style": {
-				"navigationBarTitleText": ""
+				"navigationBarTitleText": "预约门票"
 			}
 		},
 		{
@@ -35,7 +35,7 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "雪峰山智慧导览",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},

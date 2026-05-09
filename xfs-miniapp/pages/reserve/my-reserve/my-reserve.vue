@@ -58,7 +58,7 @@ const fetchMyList = async (options = {}) => {
   if (recordList.value.length === 0) {
     const cache = uni.getStorageSync('my_reserve_cache')
     if (cache) {
-      try { recordList.value = JSON.parse(cache) } catch (e) {}
+      try { recordList.value = JSON.parse(cache) } catch (e) { uni.removeStorageSync('my_reserve_cache') }
     }
   }
 

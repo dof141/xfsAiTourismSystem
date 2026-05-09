@@ -101,14 +101,13 @@ const handleSend = async () => {
 
 const scrollToBottom = () => {
 	nextTick(() => {
-		// 这里是修复滚动到底部 bug 的关键：
-		// 1. 设置一个微小的延迟确保 DOM 已经渲染
-		// 2. 将 ID 指向最后一个消息或者一个专门的底部锚点
 		setTimeout(() => {
 			lastMessageId.value = 'anchor';
 		}, 100);
 	});
 };
+
+defineExpose({ toggleChat });
 </script>
 
 <style lang="scss">

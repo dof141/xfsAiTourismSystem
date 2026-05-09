@@ -45,7 +45,7 @@
 	const hotList = ref([])
 
 	const fetchAreaList = async () => {
-		try { areaList.value = await api.areaList() } catch (e) {}
+		try { areaList.value = await api.areaList() } catch (e) { uni.showToast({ title: '景区列表加载失败', icon: 'none' }) }
 	}
 
 	const goToMyReserve = () => {
@@ -55,7 +55,7 @@
 	}
 
 	const fetchHotList = async () => {
-		try { hotList.value = await api.hotList() } catch (e) {}
+		try { hotList.value = await api.hotList() } catch (e) { uni.showToast({ title: '热门推荐加载失败', icon: 'none' }) }
 	}
 
 	const goToDetail = (item) => {

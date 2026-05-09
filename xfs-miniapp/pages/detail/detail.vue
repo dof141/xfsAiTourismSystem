@@ -81,6 +81,7 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { api } from '@/api/request.js'
+import { ensureLogin } from '@/utils/auth.js'
 import AiAssistant from '@/components/AiAssistant.vue'
 
 const areaData = ref({})
@@ -105,33 +106,7 @@ const fetchSpots = async () => {
 }
 
 const handleReserve = () => {
-  if (!uni.getStorageSync('xfs_token')) {
-    return uni.showModal({
-      title: '温馨提示',
-      content: '预约门票需要先进行极简登录哦',
-      confirmText: '去登录',
-      success: (res) => {
-        if (res.confirm) {
-          // 逻辑同首页的快捷登录
-          uni.showModal({
-            title: '极简登录',
-            editable: true,
-            placeholderText: '请输入手机号',
-            success: async (loginConfirm) => {
-              if (loginConfirm.confirm && loginConfirm.content) {
-                const loginRes = await api.touristLogin(loginConfirm.content);
-                uni.setStorageSync('xfs_token', loginRes.token);
-                uni.showToast({ title: '登录成功' });
-                // 登录成功后直接进入预约
-                proceedToReserve();
-              }
-            }
-          });
-        }
-      }
-    });
-  }
-  proceedToReserve();
+  ensureLogin(proceedToReserve, { title: '温馨提示', content: '预约门票需要先进行极简登录哦' })
 }
 
 const proceedToReserve = () => {

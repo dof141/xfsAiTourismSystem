@@ -38,6 +38,7 @@
 	import { ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import { api } from '../../api/request.js'
+	import { ensureLogin } from '@/utils/auth.js'
 	import AiAssistant from '@/components/AiAssistant.vue'
 
 	const areaList = ref([])
@@ -48,43 +49,9 @@
 	}
 
 	const goToMyReserve = () => {
-	  if (!uni.getStorageSync('xfs_token')) {
-	    return showLoginModal();
-	  }
-	  uni.navigateTo({ url: '/pages/reserve/my-reserve/my-reserve' })
-	}
-
-	const showLoginModal = () => {
-	  uni.showModal({
-	    title: '需要登录',
-	    content: '为了保障预约安全，请先进行极简登录',
-	    confirmText: '去登录',
-	    success: (res) => {
-	      if (res.confirm) {
-	        // 这里我们弹出一个输入框模拟登录，或者跳转专门的登录页
-	        // 为了简单，我们先用弹窗模拟手机号录入
-	        promptLogin();
-	      }
-	    }
-	  });
-	}
-
-	const promptLogin = () => {
-	  uni.showModal({
-	    title: '极简登录',
-	    editable: true,
-	    placeholderText: '请输入11位手机号',
-	    success: async (res) => {
-	      if (res.confirm && res.content) {
-	        try {
-	          const loginRes = await api.touristLogin(res.content);
-	          uni.setStorageSync('xfs_token', loginRes.token);
-	          uni.setStorageSync('tourist_info', JSON.stringify(loginRes));
-	          uni.showToast({ title: '登录成功' });
-	        } catch (e) {}
-	      }
-	    }
-	  });
+	  ensureLogin(() => {
+	    uni.navigateTo({ url: '/pages/reserve/my-reserve/my-reserve' })
+	  }, { title: '需要登录', content: '为了保障预约安全，请先进行极简登录' })
 	}
 
 	const fetchHotList = async () => {

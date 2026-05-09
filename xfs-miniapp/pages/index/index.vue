@@ -2,9 +2,9 @@
 	<view class="container">
 	<view class="header" style="display: flex; justify-content: space-between; align-items: center;">
 	      <text class="title">🏔️ 雪峰山智慧导览</text>
-	      <view style="display: flex; gap: 24rpx;">
-	        <view style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</view>
-	        <view style="color: #6366f1; font-size: 28rpx;" @click="goToProfile">个人中心</view>
+	      <view style="display: flex;">
+	        <view style="color: #409eff; font-size: 28rpx; padding: 10rpx 16rpx;" @click="goToMyReserve">我的预约</view>
+	        <view style="color: #6366f1; font-size: 28rpx; padding: 10rpx 16rpx;" @click="goToProfile">个人中心</view>
 	      </view>
 	    </view>
 
@@ -58,9 +58,48 @@
 	}
 
 	const goToProfile = () => {
-	  ensureLogin(() => {
-	    uni.navigateTo({ url: '/pages/profile/profile' })
-	  }, { title: '需要登录', content: '请先登录后查看个人中心' })
+	  if (!uni.getStorageSync('xfs_token')) {
+	    uni.showModal({
+	      title: '需要登录',
+	      content: '请先登录后查看个人中心',
+	      confirmText: '去登录',
+	      success: (res) => {
+	        if (res.confirm) {
+	          promptLoginDirect()
+	        }
+	      }
+	    })
+	    return
+	  }
+	  uni.navigateTo({ url: '/pages/profile/profile' })
+	}
+
+	const promptLoginDirect = () => {
+	  uni.showModal({
+	    title: '极简登录',
+	    editable: true,
+	    placeholderText: '请输入11位手机号',
+	    success: async (res) => {
+	      if (res.confirm && res.content) {
+        const phone = res.content.trim()
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+          uni.showToast({ title: '请输入正确的11位手机号', icon: 'none' })
+          return
+        }
+        try {
+          const loginRes = await api.touristLogin(phone)
+          uni.setStorageSync('xfs_token', loginRes.token)
+          uni.setStorageSync('tourist_info', JSON.stringify(loginRes))
+          uni.showToast({ title: '登录成功' })
+          setTimeout(() => {
+            uni.navigateTo({ url: '/pages/profile/profile' })
+          }, 1000)
+        } catch (e) {
+          uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+        }
+	      }
+	    }
+	  })
 	}
 
 	const fetchHotList = async () => {

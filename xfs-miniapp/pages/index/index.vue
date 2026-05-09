@@ -2,7 +2,10 @@
 	<view class="container">
 	<view class="header" style="display: flex; justify-content: space-between; align-items: center;">
 	      <text class="title">🏔️ 雪峰山智慧导览</text>
-	      <text style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</text>
+	      <view style="display: flex; gap: 24rpx;">
+	        <text style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</text>
+	        <text style="color: #6366f1; font-size: 28rpx;" @click="goToProfile">个人中心</text>
+	      </view>
 	    </view>
 
 		<view class="hot-section" v-if="hotList.length > 0">
@@ -52,6 +55,12 @@
 	  ensureLogin(() => {
 	    uni.navigateTo({ url: '/pages/reserve/my-reserve/my-reserve' })
 	  }, { title: '需要登录', content: '为了保障预约安全，请先进行极简登录' })
+	}
+
+	const goToProfile = () => {
+	  ensureLogin(() => {
+	    uni.navigateTo({ url: '/pages/profile/profile' })
+	  }, { title: '需要登录', content: '请先登录后查看个人中心' })
 	}
 
 	const fetchHotList = async () => {

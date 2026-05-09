@@ -58,6 +58,7 @@ public class TouristAuthController {
         result.put("token", token);
         result.put("touristId", tourist.getId());
         result.put("nickname", tourist.getNickname());
+        result.put("phone", tourist.getPhone());
 
         return Result.success(result);
     }

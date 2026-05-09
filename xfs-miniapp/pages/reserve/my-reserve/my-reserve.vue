@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">我的预约门票</view>
-    
+
     <view class="list-container" v-if="recordList.length > 0">
       <view class="ticket-card" v-for="item in recordList" :key="item.id">
         <view class="ticket-top">
@@ -23,7 +23,7 @@
         </view>
       </view>
     </view>
-    
+
     <view class="empty-tip" v-else>
       暂无预约记录，快去首页逛逛吧~
     </view>
@@ -40,97 +40,62 @@
 
 <script setup>
 import { ref } from 'vue'
-import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'  // 关键：导入 onPullDownRefresh
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
+import { api } from '../../../api/request.js'
 
 const recordList = ref([])
 const showQrPopup = ref(false)
 const qrCodeUrl = ref('')
 
-//关闭二维码刷新
 const closeQrPopup = () => {
   showQrPopup.value = false
-  // 关闭弹窗后重新拉取列表，核销状态可能已变化
   fetchMyList()
 }
-const fetchMyList = (options = {}) => {
+
+const fetchMyList = async (options = {}) => {
   const { showSuccessToast = false } = options
 
-  // 先读取缓存（如果当前列表为空）
   if (recordList.value.length === 0) {
     const cache = uni.getStorageSync('my_reserve_cache')
     if (cache) {
-      try {
-        recordList.value = JSON.parse(cache)
-      } catch (e) {}
+      try { recordList.value = JSON.parse(cache) } catch (e) {}
     }
   }
 
-  return new Promise((resolve) => {
-    uni.request({
-      url: 'http://localhost:8080/api/reserve/myList',
-      method: 'GET',
-      timeout: 8000,
-      success: (res) => {
-        if (res.data.code === 200) {
-          const list = res.data.data
-          // 只有返回的数据非空时才更新缓存和列表，避免空数组覆盖已有数据
-          if (list && list.length > 0) {
-            recordList.value = list
-            uni.setStorageSync('my_reserve_cache', JSON.stringify(list))
-          } else {
-            // 如果返回空数组，保留之前的缓存
-            if (recordList.value.length === 0) {
-              uni.showToast({ title: '暂无预约记录', icon: 'none' })
-            } else {
-              uni.showToast({ title: '已是最新', icon: 'none' })
-            }
-          }
-
-          if (showSuccessToast && list && list.length > 0) {
-            uni.showToast({ title: '已更新', icon: 'success', duration: 1000 })
-          }
-        } else {
-          uni.showToast({ title: res.data.msg || '获取失败', icon: 'none' })
-        }
-      },
-      fail: () => {
-        uni.showToast({ title: '网络异常，请重试', icon: 'none' })
-      },
-      complete: () => {
-        resolve()
+  try {
+    const list = await api.myReserveList()
+    if (list && list.length > 0) {
+      recordList.value = list
+      uni.setStorageSync('my_reserve_cache', JSON.stringify(list))
+    } else {
+      if (recordList.value.length === 0) {
+        uni.showToast({ title: '暂无预约记录', icon: 'none' })
       }
-    })
-  })
-}
-
-// 动态获取某一个订单的二维码并弹窗
-const fetchAndShowQr = (orderNo) => {
-  uni.showLoading({ title: '生成中...' })
-  uni.request({
-    url: `http://localhost:8080/api/reserve/qrcode/${orderNo}`,
-    method: 'GET',
-    success: (res) => {
-      uni.hideLoading()
-      if (res.data.code === 200) {
-        qrCodeUrl.value = res.data.data
-        showQrPopup.value = true
-      } else {
-        uni.showToast({ title: '获取失败', icon: 'none' })
-      }
-    },
-    fail: () => {
-      uni.hideLoading()
-      uni.showToast({ title: '网络异常', icon: 'none' })
     }
-  })
+    if (showSuccessToast && list && list.length > 0) {
+      uni.showToast({ title: '已更新', icon: 'success', duration: 1000 })
+    }
+  } catch (e) {
+    uni.showToast({ title: '网络异常，请重试', icon: 'none' })
+  }
 }
 
-// 页面显示时刷新（只保留一个 onShow）
+const fetchAndShowQr = async (orderNo) => {
+  uni.showLoading({ title: '生成中...' })
+  try {
+    qrCodeUrl.value = await api.getQrCode(orderNo)
+    showQrPopup.value = true
+  } catch (e) {
+    uni.showToast({ title: '获取失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
+}
+
 onShow(() => {
   fetchMyList()
 })
 
-// 下拉刷新
 onPullDownRefresh(() => {
   fetchMyList({ showSuccessToast: true }).finally(() => {
     uni.stopPullDownRefresh()
@@ -143,7 +108,6 @@ page { background-color: #f5f7fa; }
 .page-container { padding: 30rpx; }
 .header { font-size: 36rpx; font-weight: bold; color: #333; margin-bottom: 30rpx; }
 
-/* 车票风卡片样式 */
 .ticket-card {
   background-color: #fff;
   border-radius: 20rpx;
@@ -164,7 +128,6 @@ page { background-color: #f5f7fa; }
 
 .empty-tip { text-align: center; color: #999; margin-top: 100rpx; font-size: 28rpx; }
 
-/* 弹窗样式完全复用 */
 .qr-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 .qr-box { width: 600rpx; background-color: #ffffff; border-radius: 24rpx; padding: 50rpx 40rpx; display: flex; flex-direction: column; align-items: center; }
 .qr-title { font-size: 32rpx; font-weight: bold; color: #333; margin-bottom: 40rpx; }

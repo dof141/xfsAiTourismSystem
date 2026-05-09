@@ -6,8 +6,28 @@ spring:
     # 你的数据库名称 xfs_ai_tourism_system
     url: jdbc:mysql://127.0.0.1:3306/xfs_ai_tourism_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
     username: root
-    password: 20201211
+    password: ${DB_PASSWORD:20201211}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    # Druid 连接池详细配置
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      # 初始化连接数
+      initial-size: 5
+      # 最小空闲连接数
+      min-idle: 5
+      # 最大活跃连接数 (根据你的并发需求调整)
+      max-active: 20
+      # 获取连接等待超时的时间
+      max-wait: 60000
+      # 监控统计拦截的filters (stat:监控, wall:防火墙, log4j:日志)
+      filters: stat,wall
+      # 开启监控面板配置
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        # 登录监控面板的账号密码 (建议修改)
+        login-username: admin
+        login-password: admin123
   
   # Redis 配置
   redis:
@@ -21,3 +41,10 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 在控制台打印SQL
     map-underscore-to-camel-case: true # 开启驼峰命名转换
+
+# AI 大模型配置 (推荐使用 DeepSeek 或通义千问)
+xfs:
+  ai:
+    api-key: ${AI_API_KEY} # 建议通过环境变量注入${AI_API_KEY:你的apikey}
+    api-url: https://api.deepseek.com/chat/completions # DeepSeek 标准接口地址
+    model: deepseek-chat

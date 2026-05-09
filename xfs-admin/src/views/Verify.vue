@@ -1,48 +1,76 @@
 <template>
-  <div class="verify-container">
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <h2>🎫 景区入园核销工作台</h2>
+  <div class="modern-page-container">
+    <div class="verify-wrapper">
+      <div class="white-card verify-card">
+        <!-- 头部装饰 -->
+        <div class="verify-header">
+          <div class="icon-circle">
+            <el-icon><Ticket /></el-icon>
+          </div>
+          <h2 class="title">核销工作台</h2>
+          <p class="subtitle">请扫描游客预约二维码或手动输入校验码</p>
         </div>
-      </template>
 
-      <!-- 核心工作区：模拟扫码枪输入 -->
-      <div class="scan-area">
-        <el-input
-            v-model="scanOrderNo"
-            placeholder="请使用扫码枪扫描游客二维码，或手动输入8位短核销码(如V-A3F8...)"
-            size="large"
-            clearable
-            @keyup.enter="handleVerify"
-            class="scan-input"
-        >
-          <template #prepend>订单号或核销码</template>
-        </el-input>
-        <el-button type="primary" size="large" @click="handleVerify" :loading="loading">
-          确认核销
-        </el-button>
-      </div>
+        <!-- 输入区域 -->
+        <div class="input-section">
+          <div class="input-group">
+            <el-input
+              v-model="scanOrderNo"
+              placeholder="输入 8 位校验码或订单号"
+              size="large"
+              @keyup.enter="handleVerify"
+              class="modern-input"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-button 
+              type="primary" 
+              class="verify-btn" 
+              @click="handleVerify" 
+              :loading="loading"
+            >
+              立即核销
+            </el-button>
+          </div>
+        </div>
 
-      <!-- 结果提示区 -->
-      <div class="result-area" v-if="verifyResult">
-        <el-alert
-            :title="verifyResult.title"
-            :type="verifyResult.type"
-            :description="verifyResult.msg"
-            show-icon
-            :closable="false"
-            class="custom-alert"
-        />
+        <!-- 动态结果展示 -->
+        <transition name="el-zoom-in-top">
+          <div v-if="verifyResult" class="result-display" :class="verifyResult.type">
+            <div class="result-icon">
+              <el-icon v-if="verifyResult.type === 'success'"><Check /></el-icon>
+              <el-icon v-else><Warning /></el-icon>
+            </div>
+            <div class="result-info">
+              <div class="res-title">{{ verifyResult.title }}</div>
+              <div class="res-msg">{{ verifyResult.msg }}</div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- 最近核销记录 (模拟) -->
+        <div class="recent-verify">
+          <div class="recent-title">最近核销</div>
+          <div class="recent-list">
+            <div class="recent-item">
+              <span class="time">14:20:05</span>
+              <span class="code">V-A3F8B2C9</span>
+              <span class="status success">成功</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios' // 假设你用 axios，如果用自己封装的 request 请替换
+import { Ticket, Search, Check, Warning } from '@element-plus/icons-vue'
+import request from '../utils/request'
 
 const scanOrderNo = ref('')
 const loading = ref(false)
@@ -54,53 +82,140 @@ const handleVerify = async () => {
   }
 
   loading.value = true
+  verifyResult.value = null 
+  
   try {
-    // 调用 Java 后端的核销接口
-    const res = await axios.post(`http://localhost:8080/api/reserve/verify/${scanOrderNo.value}`)
-
-    if (res.data.code === 200) {
-      verifyResult.value = { type: 'success', title: '核销通过', msg: res.data.data }
-      ElMessage.success('核销成功')
-    } else {
-      verifyResult.value = { type: 'error', title: '核销拦截', msg: res.data.msg }
-      ElMessage.error(res.data.msg)
-    }
+    const res = await request.post(`/reserve/verify/${scanOrderNo.value}`)
+    verifyResult.value = { type: 'success', title: '核销成功', msg: '订单已验证，准予入园' }
+    ElMessage.success('核销成功')
   } catch (error) {
-    ElMessage.error('网络请求失败')
+    if (error.response && error.response.data) {
+        verifyResult.value = { type: 'error', title: '核销失败', msg: error.response.data.msg }
+    }
   } finally {
     loading.value = false
-    scanOrderNo.value = '' // 核销完清空输入框，准备扫下一个
+    scanOrderNo.value = ''
   }
 }
 </script>
 
 <style scoped>
-.verify-container {
-  padding: 20px;
+.verify-wrapper {
   display: flex;
   justify-content: center;
+  padding-top: 40px;
 }
-.box-card {
+
+.verify-card {
   width: 100%;
-  max-width: 800px;
-  margin-top: 50px;
-}
-.card-header {
+  max-width: 600px;
   text-align: center;
-  color: #303133;
+  padding: 50px 40px;
 }
-.scan-area {
+
+.icon-circle {
+  width: 80px;
+  height: 80px;
+  background: #f1f5f9;
+  color: #6366f1;
+  border-radius: 50%;
   display: flex;
-  gap: 20px;
-  margin: 40px 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 24px;
 }
-.scan-input {
-  flex: 1;
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 8px;
 }
-.result-area {
-  margin-top: 30px;
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-bottom: 40px;
 }
-.custom-alert {
+
+.input-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.modern-input :deep(.el-input__wrapper) {
+  border-radius: 12px;
+  background: #f8fafc;
+  box-shadow: none !important;
+  border: 1px solid #e2e8f0;
+}
+
+.verify-btn {
+  border-radius: 12px;
+  padding: 0 30px;
+  font-weight: 700;
+  height: 45px;
+}
+
+/* 结果展示 */
+.result-display {
+  display: flex;
+  align-items: center;
   padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  text-align: left;
+  gap: 16px;
 }
+
+.result-display.success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.result-display.error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.result-icon {
+  font-size: 24px;
+}
+
+.res-title {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.res-msg {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 最近核销 */
+.recent-verify {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 30px;
+  text-align: left;
+}
+
+.recent-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 10px 0;
+  color: #1e293b;
+}
+
+.recent-item .time { color: #94a3b8; }
+.recent-item .status.success { color: #10b981; font-weight: 700; }
 </style>

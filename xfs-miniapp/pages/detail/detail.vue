@@ -1,185 +1,388 @@
 <template>
   <view class="detail-container">
-    <view class="cover-image">
-      <text class="cover-text">{{ areaData.name }}</text>
-    </view>
-
-    <view class="content-box">
-      <view class="header-info">
-        <text class="title">{{ areaData.name }}</text>
-        <view class="tags-row">
-          <text class="tag level">{{ areaData.level }}景区</text>
-          <text class="tag location">{{ areaData.address }}</text>
-        </view>
-      </view>
-
-      <view class="section">
-        <view class="section-title">景区介绍</view>
-        <view class="section-content">{{ areaData.intro }}</view>
-      </view>
-
-      <view class="section">
-        <view class="section-title">基础信息</view>
-        <view class="info-row">
-          <text class="label">咨询电话：</text>
-          <text class="value">{{ areaData.tel }}</text>
-        </view>
-        <view class="info-row">
-          <text class="label">入园时间：</text>
-          <text class="value">08:00 - 17:30</text>
+    <!-- 1. 沉浸式顶部封面 -->
+    <view class="hero-section">
+      <image class="cover-img" :src="areaData.coverImg || '/static/logo.png'" mode="aspectFill"></image>
+      <view class="hero-mask"></view>
+      <view class="hero-content">
+        <text class="area-level">{{ areaData.level }}景区</text>
+        <h1 class="area-name">{{ areaData.name }}</h1>
+        <view class="address-box">
+          <el-icon><Location /></el-icon>
+          <text>{{ areaData.address }}</text>
         </view>
       </view>
     </view>
 
+    <view class="main-content">
+      <!-- 2. 景区概况卡片 -->
+      <view class="info-card">
+        <view class="section-title">景区概况</view>
+        <view class="intro-text">{{ areaData.intro }}</view>
+        <view class="meta-row">
+          <view class="meta-item">
+            <text class="label">咨询电话</text>
+            <text class="value">{{ areaData.tel }}</text>
+          </view>
+          <view class="meta-item">
+            <text class="label">入园时间</text>
+            <text class="value">08:00 - 17:30</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 核心景点画廊 (重头戏) -->
+      <view class="spots-section" v-if="spotList.length > 0">
+        <view class="header-row">
+          <text class="section-title">核心景点推荐</text>
+          <text class="count-tag">{{ spotList.length }}个地点</text>
+        </view>
+        
+        <scroll-view class="spots-scroll" scroll-x="true" enable-flex>
+          <view class="spot-card" v-for="spot in spotList" :key="spot.id">
+            <image class="spot-img" :src="spot.spotImg || '/static/logo.png'" mode="aspectFill"></image>
+            <view class="spot-info">
+              <text class="spot-name">{{ spot.name }}</text>
+              <view class="spot-price-row">
+                <text class="currency">¥</text>
+                <text class="price">{{ spot.price }}</text>
+                <text class="unit">/人</text>
+              </view>
+              <text class="spot-time">🕒 {{ spot.openTime }}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 4. 游玩提示 -->
+      <view class="tips-card">
+        <view class="section-title">入园须知</view>
+        <view class="tip-item">· 请提前通过本系统完成实名预约</view>
+        <view class="tip-item">· 入园时请出示核销码进行扫描</view>
+        <view class="tip-item">· 建议自备适量饮用水，保持景区环境整洁</view>
+      </view>
+    </view>
+
+    <!-- 底部操作条 -->
     <view class="bottom-bar">
-      <button class="reserve-btn" @click="handleReserve">立即预约</button>
+      <view class="chat-btn" @click="openAi">
+        <text class="icon">🤖</text>
+        <text>问导游</text>
+      </view>
+      <button class="reserve-btn" @click="handleReserve">立即预约门票</button>
     </view>
+	
+	<!-- 全局 AI 助手 -->
+	<AiAssistant ref="aiRef" />
   </view>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { api } from '@/api/request.js'
+import AiAssistant from '@/components/AiAssistant.vue'
 
-// 用于存放当前景区的数据
 const areaData = ref({})
+const spotList = ref([])
+const aiRef = ref(null)
 
-// 页面加载时，解析首页传过来的数据
-onLoad((options) => {
+onLoad(async (options) => {
   if (options.data) {
-    // 解码并转换为对象
     areaData.value = JSON.parse(decodeURIComponent(options.data))
+    uni.setNavigationBarTitle({ title: areaData.value.name })
     
-    // 动态设置当前页面的标题栏
-    uni.setNavigationBarTitle({
-      title: areaData.value.name
-    })
+    // 获取子景点数据
+    fetchSpots()
   }
 })
 
-// 点击预约按钮的事件
+const fetchSpots = async () => {
+  try {
+    const data = await api.spotListByArea(areaData.value.id)
+    spotList.value = data
+  } catch (e) {}
+}
+
 const handleReserve = () => {
+  if (!uni.getStorageSync('xfs_token')) {
+    return uni.showModal({
+      title: '温馨提示',
+      content: '预约门票需要先进行极简登录哦',
+      confirmText: '去登录',
+      success: (res) => {
+        if (res.confirm) {
+          // 逻辑同首页的快捷登录
+          uni.showModal({
+            title: '极简登录',
+            editable: true,
+            placeholderText: '请输入手机号',
+            success: async (loginConfirm) => {
+              if (loginConfirm.confirm && loginConfirm.content) {
+                const loginRes = await api.touristLogin(loginConfirm.content);
+                uni.setStorageSync('xfs_token', loginRes.token);
+                uni.showToast({ title: '登录成功' });
+                // 登录成功后直接进入预约
+                proceedToReserve();
+              }
+            }
+          });
+        }
+      }
+    });
+  }
+  proceedToReserve();
+}
+
+const proceedToReserve = () => {
   uni.navigateTo({
     url: `/pages/reserve/reserve?id=${areaData.value.id}&name=${areaData.value.name}`
   })
 }
-  // 提示：下一步我们将在这里跳转到真正的【选择日期和时段】的页面！
 
+const openAi = () => {
+  // 触发全局 AI 组件的显示逻辑
+  if (aiRef.value) {
+    aiRef.value.toggleChat()
+  }
+}
 </script>
 
-<style>
-/* 整个页面加个灰色背景 */
+<style lang="scss">
 page {
-  background-color: #f5f7fa;
+  background-color: #f8fafc;
 }
 
 .detail-container {
-  /* 底部留出空间，防止被吸底按钮挡住内容 */
-  padding-bottom: 120rpx; 
+  padding-bottom: 140rpx;
 }
 
-/* 模拟封面图 */
-.cover-image {
+/* 沉浸式 Hero 区域 */
+.hero-section {
+  position: relative;
   width: 100%;
-  height: 400rpx;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.cover-text {
-  font-size: 48rpx;
-  color: #fff;
-  font-weight: bold;
-  letter-spacing: 4rpx;
-  text-shadow: 0 4rpx 8rpx rgba(0,0,0,0.2);
+  height: 550rpx;
+  overflow: hidden;
+  
+  .cover-img {
+    width: 100%;
+    height: 100%;
+    transform: scale(1.1); /* 轻微放大，增加视觉张力 */
+  }
+  
+  .hero-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7));
+  }
+  
+  .hero-content {
+    position: absolute;
+    bottom: 60rpx;
+    left: 40rpx;
+    right: 40rpx;
+    color: #fff;
+    
+    .area-level {
+      font-size: 24rpx;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 6rpx 20rpx;
+      border-radius: 30rpx;
+      margin-bottom: 16rpx;
+      display: inline-block;
+    }
+    
+    .area-name {
+      font-size: 48rpx;
+      font-weight: 800;
+      margin-bottom: 12rpx;
+      text-shadow: 0 4rpx 10rpx rgba(0,0,0,0.3);
+    }
+    
+    .address-box {
+      display: flex;
+      align-items: center;
+      font-size: 26rpx;
+      opacity: 0.9;
+      gap: 8rpx;
+    }
+  }
 }
 
-/* 内容卡片区 */
-.content-box {
-  background-color: #fff;
-  border-radius: 30rpx 30rpx 0 0;
-  margin-top: -30rpx; /* 向上偏移一点，做出压在图片上的层叠感 */
-  padding: 40rpx 30rpx;
+.main-content {
+  margin-top: -40rpx;
   position: relative;
   z-index: 10;
+  padding: 0 30rpx;
 }
 
-.header-info {
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 30rpx;
+/* 通用卡片样式 */
+.info-card, .spots-section, .tips-card {
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 40rpx;
   margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.03);
 }
-.title {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20rpx;
-  display: block;
-}
-.tags-row {
-  display: flex;
-}
-.tag {
-  font-size: 24rpx;
-  padding: 6rpx 20rpx;
-  border-radius: 30rpx;
-  margin-right: 20rpx;
-}
-.tag.level { background-color: #e1f3d8; color: #67c23a; }
-.tag.location { background-color: #ecf5ff; color: #409eff; }
 
-/* 块级内容区 */
-.section {
-  margin-bottom: 40rpx;
-}
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20rpx;
-  border-left: 8rpx solid #409eff;
-  padding-left: 16rpx;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 24rpx;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -8rpx;
+    width: 40rpx;
+    height: 6rpx;
+    background: #6366f1;
+    border-radius: 3rpx;
+  }
 }
-.section-content {
+
+.intro-text {
   font-size: 28rpx;
-  color: #666;
-  line-height: 1.8;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 30rpx;
   text-align: justify;
 }
 
-/* 列表信息 */
-.info-row {
+.meta-row {
   display: flex;
-  margin-bottom: 16rpx;
-  font-size: 28rpx;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 30rpx;
+  gap: 40rpx;
+  
+  .meta-item {
+    flex: 1;
+    .label { display: block; font-size: 22rpx; color: #94a3b8; margin-bottom: 4rpx; }
+    .value { font-size: 28rpx; color: #1e293b; font-weight: 600; }
+  }
 }
-.label { color: #999; width: 140rpx; }
-.value { color: #333; flex: 1; }
 
-/* 底部吸底按钮条 */
+/* 景点画廊样式 */
+.spots-section {
+  padding-right: 0; /* 让滚动条贴边 */
+  
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 40rpx;
+    margin-bottom: 30rpx;
+    
+    .count-tag {
+      font-size: 22rpx;
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 4rpx 16rpx;
+      border-radius: 20rpx;
+    }
+  }
+}
+
+.spots-scroll {
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  
+  .spot-card {
+    display: inline-block;
+    width: 320rpx;
+    margin-right: 24rpx;
+    background: #f8fafc;
+    border-radius: 24rpx;
+    overflow: hidden;
+    
+    .spot-img {
+      width: 100%;
+      height: 220rpx;
+    }
+    
+    .spot-info {
+      padding: 20rpx;
+      
+      .spot-name {
+        display: block;
+        font-size: 28rpx;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10rpx;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .spot-price-row {
+        margin-bottom: 8rpx;
+        .currency { font-size: 20rpx; color: #ef4444; }
+        .price { font-size: 32rpx; font-weight: 800; color: #ef4444; }
+        .unit { font-size: 20rpx; color: #94a3b8; }
+      }
+      
+      .spot-time {
+        font-size: 20rpx;
+        color: #94a3b8;
+      }
+    }
+  }
+}
+
+.tip-item {
+  font-size: 26rpx;
+  color: #64748b;
+  margin-bottom: 12rpx;
+}
+
+/* 底部栏 */
 .bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 120rpx;
-  background-color: #fff;
-  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   display: flex;
-  justify-content: center;
   align-items: center;
   padding: 0 30rpx;
+  padding-bottom: env(safe-area-inset-bottom);
   box-sizing: border-box;
-  z-index: 999;
-}
-.reserve-btn {
-  width: 100%;
-  background-color: #409eff;
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: bold;
-  border-radius: 40rpx;
-  line-height: 80rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
+  z-index: 1000;
+  
+  .chat-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 40rpx;
+    color: #64748b;
+    font-size: 20rpx;
+    .icon { font-size: 40rpx; margin-bottom: 4rpx; }
+  }
+  
+  .reserve-btn {
+    flex: 1;
+    height: 84rpx;
+    background: linear-gradient(135deg, #6366f1, #0ea5e9);
+    color: #fff;
+    font-size: 30rpx;
+    font-weight: 700;
+    border-radius: 42rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    box-shadow: 0 8rpx 16rpx rgba(99, 102, 241, 0.3);
+  }
 }
 </style>

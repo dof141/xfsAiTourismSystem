@@ -20,7 +20,7 @@
     <view class="form-group">
       <view class="section-title"><text class="dot"></text> 2. 选择入园时段</view>
       <view class="slot-grid" v-if="slotList.length > 0">
-        <view 
+        <view
           v-for="item in slotList" :key="item.id"
           :class="['slot-item', selectedSlotId === item.id ? 'active' : '']"
           @click="selectedSlotId = item.id"
@@ -41,10 +41,7 @@
 	      <view class="qr-box">
 	        <view class="qr-title">✅ 预约成功</view>
 	        <view class="qr-tips">请在入园时向工作人员出示此码</view>
-	        
-	        <!-- Base64 图片直接丢进 image 标签，绝对不会挂 -->
 	        <image class="qr-img" :src="qrCodeUrl" mode="aspectFit"></image>
-	        
 	        <button class="qr-close-btn" @click="closeQrPopup">我知道了</button>
 	      </view>
 	    </view>
@@ -54,14 +51,12 @@
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { api } from '../../api/request.js'
 
 const areaId = ref(null)
-// 新增：控制二维码弹窗显示隐藏的变量
 const showQrPopup = ref(false)
-// 新增：存放动态二维码 Base64 数据的变量
 const qrCodeUrl = ref('')
 
-// 新增：游客点击“我知道了”关闭弹窗并返回上一页
 const closeQrPopup = () => {
   showQrPopup.value = false
   uni.navigateBack()
@@ -70,8 +65,7 @@ const areaName = ref('')
 const selectedDate = ref('')
 const selectedSlotId = ref(null)
 const slotList = ref([])
-// 设置日期选择器的最小值为今天
-const startDate = new Date().toISOString().split('T')[0] 
+const startDate = new Date().toISOString().split('T')[0]
 
 onLoad((options) => {
   areaId.value = options.id
@@ -79,61 +73,40 @@ onLoad((options) => {
   fetchSlots()
 })
 
-// 从后端获取时段列表
-const fetchSlots = () => {
-  uni.request({
-    url: 'http://localhost:8080/api/slot/list',
-    method: 'GET',
-    success: (res) => { 
-      if(res.data.code === 200) {
-        slotList.value = res.data.data 
-      }
-    },
-    fail: () => {
-      uni.showToast({ title: '网络错误，请检查后端', icon: 'none' })
-    }
-  })
+const fetchSlots = async () => {
+  try {
+    slotList.value = await api.slotList()
+  } catch (e) {
+    uni.showToast({ title: '网络错误，请检查后端', icon: 'none' })
+  }
 }
 
-// 日期改变事件
-const onDateChange = (e) => { 
-  selectedDate.value = e.detail.value 
+const onDateChange = (e) => {
+  selectedDate.value = e.detail.value
 }
 
-// 提交预约
-const submitReserve = () => {
+const submitReserve = async () => {
   if (!selectedDate.value) {
     return uni.showToast({ title: '请先选择游玩日期', icon: 'none' })
   }
   if (!selectedSlotId.value) {
     return uni.showToast({ title: '请选择入园时段', icon: 'none' })
   }
-  
+
   uni.showLoading({ title: '正在提交...' })
-  uni.request({
-    url: 'http://localhost:8080/api/reserve/add',
-    method: 'POST',
-    data: {
+  try {
+    const base64Data = await api.addReserve({
       areaId: areaId.value,
       reserveDate: selectedDate.value,
       slotId: selectedSlotId.value
-    },
- success: (res) => {
-       uni.hideLoading()
-       if(res.data.code === 200) {
-         // 1. 把后端传来的 Base64 存入变量
-         qrCodeUrl.value = res.data.data;
-         // 2. 弹出我们自己写的精美二维码弹窗
-         showQrPopup.value = true;
-       } else {
-         uni.showModal({ title: '预约失败', content: res.data.msg, showCancel: false })
-       }
-     },
-    fail: () => {
-      uni.hideLoading()
-      uni.showToast({ title: '请求失败', icon: 'none' })
-    }
-  })
+    })
+    qrCodeUrl.value = base64Data
+    showQrPopup.value = true
+  } catch (e) {
+    uni.showModal({ title: '预约失败', content: e.msg || '请稍后重试', showCancel: false })
+  } finally {
+    uni.hideLoading()
+  }
 }
 </script>
 
@@ -143,10 +116,9 @@ page {
 }
 .reserve-container {
   padding: 30rpx;
-  padding-bottom: 150rpx; /* 给底部按钮留空间 */
+  padding-bottom: 150rpx;
 }
 
-/* 顶部卡片 */
 .info-card {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   border-radius: 20rpx;
@@ -167,7 +139,6 @@ page {
   color: #ffffff;
 }
 
-/* 表单组 */
 .form-group {
   background-color: #ffffff;
   border-radius: 20rpx;
@@ -191,7 +162,6 @@ page {
   margin-right: 16rpx;
 }
 
-/* 日期选择器 */
 .picker-box {
   display: flex;
   justify-content: space-between;
@@ -205,7 +175,6 @@ page {
 .date-text { color: #333; font-size: 30rpx; font-weight: bold; }
 .arrow { color: #ccc; }
 
-/* 时段网格 */
 .slot-grid {
   display: flex;
   flex-wrap: wrap;
@@ -233,7 +202,6 @@ page {
   font-size: 22rpx;
   color: #67c23a;
 }
-/* 选中状态 */
 .slot-item.active {
   background-color: #ecf5ff;
   border-color: #409eff;
@@ -249,7 +217,6 @@ page {
   padding: 20rpx 0;
 }
 
-/* 底部固定按钮 */
 .bottom-bar {
   position: fixed;
   bottom: 0;
@@ -269,21 +236,19 @@ page {
   font-weight: bold;
   line-height: 88rpx;
 }
-/* 二维码弹窗遮罩层 */
 .qr-mask {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* 保证在最顶层 */
+  z-index: 9999;
 }
 
-/* 弹窗白底盒子 */
 .qr-box {
   width: 600rpx;
   background-color: #ffffff;
@@ -298,7 +263,7 @@ page {
 .qr-title {
   font-size: 40rpx;
   font-weight: bold;
-  color: #67c23a; /* 成功绿 */
+  color: #67c23a;
   margin-bottom: 20rpx;
 }
 
@@ -312,7 +277,7 @@ page {
   width: 400rpx;
   height: 400rpx;
   margin-bottom: 50rpx;
-  border: 1px solid #eee; /* 给二维码加个淡淡的边框 */
+  border: 1px solid #eee;
   padding: 10rpx;
 }
 

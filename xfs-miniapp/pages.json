@@ -18,6 +18,12 @@
 				"navigationBarTitleText": ""
 			}
 		},
+		{
+			"path": "pages/ai/ai",
+			"style": {
+				"navigationBarTitleText": "AI 智能导览"
+			}
+		},
 
 		{
 		  "path": "pages/reserve/my-reserve/my-reserve",

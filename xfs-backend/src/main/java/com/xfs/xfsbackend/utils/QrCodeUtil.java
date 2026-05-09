@@ -24,8 +24,7 @@ public class QrCodeUtil {
             String base64Image = Base64.getEncoder().encodeToString(outputStream.toByteArray());
             return "data:image/png;base64," + base64Image;
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException("二维码生成失败: " + e.getMessage(), e);
         }
     }
 }

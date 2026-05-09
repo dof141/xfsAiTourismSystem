@@ -1,0 +1,45 @@
+package com.xfs.xfsbackend;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class StatisticsApiTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void testGetStatCards() throws Exception {
+        mockMvc.perform(get("/api/stats/cards"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.todayReserve").exists())
+                .andExpect(jsonPath("$.data.verifyRate").exists());
+    }
+
+    @Test
+    void testGetAreaHeat() throws Exception {
+        mockMvc.perform(get("/api/stats/areaHeat"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    @Test
+    void testGetTrend() throws Exception {
+        mockMvc.perform(get("/api/stats/trend"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.dates").isArray())
+                .andExpect(jsonPath("$.data.values").isArray());
+    }
+}

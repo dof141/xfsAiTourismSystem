@@ -1,66 +1,109 @@
 package com.xfs.xfsbackend.common;
 
-import cn.hutool.http.HttpUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-//ai 类，负责进行处理ai导游功能
+
+/**
+ * AI 导游工具类
+ * 已接入真实大模型接口 (OpenAI 兼容协议)
+ */
+@Slf4j
 @Component
 public class AiUtils {
 
-    // ⚠️ 这里我们先模拟一个本地的方法，证明整个链路是通的。
-    // 等你以后申请到真实的 API Key（比如通义千问、DeepSeek），就把里面的代码换成真实的 HTTP 请求。
+    @Value("${xfs.ai.api-key}")
+    private String apiKey;
+
+    @Value("${xfs.ai.api-url}")
+    private String apiUrl;
+
+    @Value("${xfs.ai.model}")
+    private String model;
+
+    // 预设系统人设 Prompt：让 AI 成为雪峰山专家
+    private static final String SYSTEM_PROMPT = 
+            "你现在是【雪峰山智慧文旅系统】的专属 AI 导游。你的名字叫'雪峰百事通'。\n" +
+            "你的职责：\n" +
+            "1. 介绍怀化雪峰山五大景区（穿岩山、大花瑶、阳雀坡、山背花瑶梯田、雪峰山国家森林公园）的自然美景、历史文化、门票价格和开放时间。\n" +
+            "2. 为游客规划旅游路线，推荐当地特色美食（如花瑶腊肉、红薯粉）。\n" +
+            "3. 回答关于景区预约、天气情况等相关问题。\n" +
+            "要求：语气亲切、热情、专业。如果用户的问题与旅游或雪峰山完全无关，请礼貌地引导用户回到旅游话题。";
 
     /**
-     * 调用大模型接口 (模拟版)
+     * 调用大模型接口 (真实版)
      * @param question 用户的提问
      * @return AI 的回答
      */
     public String getAiAnswer(String question) {
+        log.info("开始调用 AI 接口，提问内容: {}", question);
 
-        // --- 以下是模拟 AI 思考的假数据逻辑，用于前期开发联调 ---
-        String answer = "对不起，我不太明白您的意思。我是雪峰山专属导览助手，您可以问我关于穿岩山、大花瑶等五大景区的问题。";
-
-        if (question.contains("门票") || question.contains("价格")) {
-            answer = "雪峰山五大景区门票各不相同。例如：雪峰山国家森林公园核心景点英雄山门票参考价为30元；穿岩山景区枫香瑶寨参考价为45元。具体请以您预约当天的实际价格为准。";
-        } else if (question.contains("穿岩山") || question.contains("玻璃栈道")) {
-            answer = "穿岩山景区是我国首个民企申报成功的国家级森林公园！其核心景点包括惊险刺激的山鬼玻璃栈道（55元）和极具特色的枫香瑶寨（45元），非常适合周末游玩。";
-        } else if (question.contains("路线") || question.contains("怎么玩")) {
-            answer = "为您推荐【雪峰山抗战文化与梯田风光2日游】路线：\nDay1: 上午游览阳雀坡抗战古村，感受历史；下午前往穿岩山景区，夜宿枫香瑶寨。\nDay2: 前往山背花瑶梯田，在观景台看云海和万亩梯田，体验农耕文化。";
-        } else if (question.contains("避暑") || question.contains("夏天")) {
-            answer = "如果您想避暑，强烈推荐【虎形山大花瑶景区】！那里平均海拔1350米，夏季最高气温不超过27℃，还有旺溪瀑布群，是绝佳的避暑胜地。";
+        // 如果没有配置 Key，返回提示（防止报错导致系统崩溃）
+        if (apiKey == null || apiKey.contains("your-real-key")) {
+            return "【系统提示】AI 接口密钥尚未配置，请联系管理员在 application.yml 中配置 API Key。目前为您开启模拟回答模式：雪峰山欢迎您！这里景色优美，适合避暑。";
         }
 
-        // 模拟网络延迟 1 秒钟，让它看起来像真的在思考
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // 1. 构建请求消息体 (OpenAI 标准格式)
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", model);
+            
+            List<Map<String, String>> messages = new ArrayList<>();
+            // 添加系统提示词
+            Map<String, String> systemMsg = new HashMap<>();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", SYSTEM_PROMPT);
+            messages.add(systemMsg);
+            
+            // 添加用户问题
+            Map<String, String> userMsg = new HashMap<>();
+            userMsg.put("role", "user");
+            userMsg.put("content", question);
+            messages.add(userMsg);
+            
+            requestBody.put("messages", messages);
+            requestBody.put("temperature", 0.7); // 适中的创造力
+
+            // 2. 发送 POST 请求 (使用 Hutool)
+            String jsonResult = HttpRequest.post(apiUrl)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .body(JSONUtil.toJsonStr(requestBody))
+                    .timeout(30000) // 30秒超时，AI 思考比较慢
+                    .execute().body();
+
+            log.info("AI 接口返回原始数据: {}", jsonResult);
+
+            // 3. 解析返回的 JSON
+            JSONObject jsonObject = JSONUtil.parseObj(jsonResult);
+            
+            // 检查是否有错误返回
+            if (jsonObject.containsKey("error")) {
+                JSONObject error = jsonObject.getJSONObject("error");
+                return "AI 助手暂时无法回答：" + error.getStr("message");
+            }
+
+            // 提取 choices[0].message.content
+            JSONArray choices = jsonObject.getJSONArray("choices");
+            if (choices != null && !choices.isEmpty()) {
+                JSONObject firstChoice = choices.getJSONObject(0);
+                return firstChoice.getJSONObject("message").getStr("content");
+            }
+
+        } catch (Exception e) {
+            log.error("调用 AI 接口发生异常: ", e);
+            return "抱歉，由于网络波动，我暂时无法连接到大脑，请稍后再试。";
         }
 
-        return answer;
-
-        /* // --- ⬇️ 这里是真实调用大模型API的骨架代码（供你答辩和后期升级参考） ⬇️ ---
-        // 假设你申请了某个大模型的 API Key
-        String apiKey = "sk-xxxxxxxxxxxxxxxxx";
-        String apiUrl = "https://api.xxxx.com/v1/chat/completions";
-
-        // 构建符合大模型要求的 JSON 数据结构（通常包含系统人设和用户问题）
-        Map<String, Object> requestBody = new HashMap<>();
-        // ... (此处省略构建消息体的细节，不同大模型结构略有不同，但大同小异)
-
-        // 使用 Hutool 发送真正的 HTTP POST 请求
-        String jsonResult = HttpUtil.createPost(apiUrl)
-                .header("Authorization", "Bearer " + apiKey)
-                .body(JSONUtil.toJsonStr(requestBody))
-                .execute().body();
-
-        // 解析返回的 JSON 拿到核心文本
-        JSONObject jsonObject = JSONUtil.parseObj(jsonResult);
-        // return 解析出来的文本...
-        */
+        return "我思考了很久，但没能给出准确答案，换个方式问我吧？";
     }
 }

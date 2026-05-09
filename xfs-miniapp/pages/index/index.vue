@@ -5,12 +5,10 @@
 	      <text style="color: #409eff; font-size: 28rpx;" @click="goToMyReserve">我的预约</text>
 	    </view>
 
-		<!-- 新增：热门推荐模块 -->
 		<view class="hot-section" v-if="hotList.length > 0">
 			<view class="section-title">🔥 本周热门推荐</view>
 			<scroll-view class="hot-scroll" scroll-x="true">
 				<view class="hot-card" v-for="(item, index) in hotList" :key="item.id" @click="goToDetail(item)">
-					<!-- 皇冠排名 -->
 					<view :class="['rank-badge', 'rank-' + (index + 1)]">TOP {{ index + 1 }}</view>
 					<view class="hot-name">{{ item.name }}</view>
 					<view class="hot-data">👀 {{ item.viewCount }} 人浏览</view>
@@ -18,7 +16,6 @@
 			</scroll-view>
 		</view>
 
-		<!-- 原有的：全部景区列表 -->
 		<view class="area-list">
 			<view class="section-title">📍 全部景区</view>
 			<view class="area-card" v-for="item in areaList" :key="item.id" @click="goToDetail(item)">
@@ -31,42 +28,67 @@
 				<view class="click-hint">查看详情 ➔</view>
 			</view>
 		</view>
+
+		<!-- 新的全局 AI 助手组件 -->
+		<AiAssistant />
 	</view>
 </template>
 
 <script setup>
-	import {
-		ref
-	} from 'vue'
-	import {
-		onLoad
-	} from '@dcloudio/uni-app'
+	import { ref } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
+	import { api } from '../../api/request.js'
+	import AiAssistant from '@/components/AiAssistant.vue'
 
 	const areaList = ref([])
-	const hotList = ref([]) // 新增：存放热门数据
+	const hotList = ref([])
 
-	// 获取全部列表
-	const fetchAreaList = () => {
-		uni.request({
-			url: 'http://localhost:8080/api/area/list',
-			success: (res) => {
-				if (res.data.code === 200) areaList.value = res.data.data
-			}
-		})
+	const fetchAreaList = async () => {
+		try { areaList.value = await api.areaList() } catch (e) {}
 	}
-	//跳转到预约界面
+
 	const goToMyReserve = () => {
+	  if (!uni.getStorageSync('xfs_token')) {
+	    return showLoginModal();
+	  }
 	  uni.navigateTo({ url: '/pages/reserve/my-reserve/my-reserve' })
 	}
 
-	// 新增：获取热门推荐
-	const fetchHotList = () => {
-		uni.request({
-			url: 'http://localhost:8080/api/area/hot',
-			success: (res) => {
-				if (res.data.code === 200) hotList.value = res.data.data
-			}
-		})
+	const showLoginModal = () => {
+	  uni.showModal({
+	    title: '需要登录',
+	    content: '为了保障预约安全，请先进行极简登录',
+	    confirmText: '去登录',
+	    success: (res) => {
+	      if (res.confirm) {
+	        // 这里我们弹出一个输入框模拟登录，或者跳转专门的登录页
+	        // 为了简单，我们先用弹窗模拟手机号录入
+	        promptLogin();
+	      }
+	    }
+	  });
+	}
+
+	const promptLogin = () => {
+	  uni.showModal({
+	    title: '极简登录',
+	    editable: true,
+	    placeholderText: '请输入11位手机号',
+	    success: async (res) => {
+	      if (res.confirm && res.content) {
+	        try {
+	          const loginRes = await api.touristLogin(res.content);
+	          uni.setStorageSync('xfs_token', loginRes.token);
+	          uni.setStorageSync('tourist_info', JSON.stringify(loginRes));
+	          uni.showToast({ title: '登录成功' });
+	        } catch (e) {}
+	      }
+	    }
+	  });
+	}
+
+	const fetchHotList = async () => {
+		try { hotList.value = await api.hotList() } catch (e) {}
 	}
 
 	const goToDetail = (item) => {
@@ -78,7 +100,7 @@
 
 	onLoad(() => {
 		fetchAreaList()
-		fetchHotList() // 加载页面时同时获取热门数据
+		fetchHotList()
 	})
 </script>
 
@@ -111,7 +133,6 @@
 		margin-top: 20rpx;
 	}
 
-	/* 热门推荐独有的样式 */
 	.hot-section {
 		margin-bottom: 40rpx;
 	}
@@ -122,31 +143,31 @@
 	}
 
 	.hot-card {
-		display: inline-block; 
-		  vertical-align: top; /* 🌟关键修复：强制顶部对齐，解决高低不平的问题 */
-		  width: 290rpx; /* 稍微加宽一点点 */
-		  height: 180rpx; 
+		display: inline-block;
+		  vertical-align: top;
+		  width: 290rpx;
+		  height: 180rpx;
 		  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-		  border-radius: 16rpx; 
-		  margin-right: 20rpx; 
-		  padding: 30rpx 20rpx; /* 左右内边距调小一点，给文字留空间 */
+		  border-radius: 16rpx;
+		  margin-right: 20rpx;
+		  padding: 30rpx 20rpx;
 		  box-sizing: border-box;
 		  position: relative;
 		  box-shadow: 0 4rpx 12rpx rgba(255, 154, 158, 0.3);
 	}
 
 	.hot-name {
-		font-size: 30rpx; 
-  font-weight: bold; 
-  color: #fff; 
-  margin-top: 16rpx; 
-  white-space: normal; 
-  line-height: 1.4; 
-  display: -webkit-box; 
-  -webkit-box-orient: vertical; 
-  -webkit-line-clamp: 2; 
-  overflow: hidden; 
-  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1); /* 🌟细节优化：加一点文字阴影，增加可读性 */
+		font-size: 30rpx;
+	  font-weight: bold;
+	  color: #fff;
+	  margin-top: 16rpx;
+	  white-space: normal;
+	  line-height: 1.4;
+	  display: -webkit-box;
+	  -webkit-box-orient: vertical;
+	  -webkit-line-clamp: 2;
+	  overflow: hidden;
+	  text-shadow: 0 2rpx 4rpx rgba(0,0,0,0.1);
 	}
 
 	.hot-data {
@@ -166,19 +187,10 @@
 		font-weight: bold;
 	}
 
-	.rank-1 {
-		background-color: #f56c6c;
-	}
+	.rank-1 { background-color: #f56c6c; }
+	.rank-2 { background-color: #e6a23c; }
+	.rank-3 { background-color: #409eff; }
 
-	.rank-2 {
-		background-color: #e6a23c;
-	}
-
-	.rank-3 {
-		background-color: #409eff;
-	}
-
-	/* 常规列表样式保持不变 */
 	.area-card {
 		background-color: #ffffff;
 		border-radius: 16rpx;

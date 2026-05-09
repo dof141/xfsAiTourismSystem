@@ -3,13 +3,14 @@ package com.xfs.xfsbackend.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xfs.xfsbackend.common.Result;
 import com.xfs.xfsbackend.entity.ScenicArea;
+import com.xfs.xfsbackend.entity.ScenicSpot;
 import com.xfs.xfsbackend.service.ScenicAreaService;
+import com.xfs.xfsbackend.service.ScenicSpotService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 //景点相关的控制器
 @RestController
 @RequestMapping("/api/area")
@@ -17,16 +18,65 @@ public class ScenicAreaController {
 
     @Autowired
     private ScenicAreaService scenicAreaService;
+    
+    @Autowired
+    private ScenicSpotService scenicSpotService;
 
     /**
      * 返回所有的景点信息
-     * @return
      */
     @GetMapping("/list")
     public Result<List<ScenicArea>> getAreaList() {
-        List<ScenicArea> list = scenicAreaService.list();
-        return Result.success(list);
+        return Result.success(scenicAreaService.list());
     }
+
+    /**
+     * 保存或更新景区
+     */
+    @PostMapping("/save")
+    public Result<String> saveArea(@RequestBody ScenicArea area) {
+        scenicAreaService.saveOrUpdate(area);
+        return Result.success("保存成功");
+    }
+
+    /**
+     * 删除景区
+     */
+    @DeleteMapping("/{id}")
+    public Result<String> deleteArea(@PathVariable Long id) {
+        scenicAreaService.removeById(id);
+        return Result.success("删除成功");
+    }
+
+    /**
+     * 获取指定景区下的所有子景点
+     */
+    @GetMapping("/{id}/spots")
+    public Result<List<ScenicSpot>> getSpotsByArea(@PathVariable Long id) {
+        List<ScenicSpot> spots = scenicSpotService.lambdaQuery()
+                .eq(ScenicSpot::getAreaId, id)
+                .list();
+        return Result.success(spots);
+    }
+    
+    /**
+     * 保存或更新子景点
+     */
+    @PostMapping("/spot/save")
+    public Result<String> saveSpot(@RequestBody ScenicSpot spot) {
+        scenicSpotService.saveOrUpdate(spot);
+        return Result.success("子景点保存成功");
+    }
+
+    /**
+     * 删除子景点
+     */
+    @DeleteMapping("/spot/{id}")
+    public Result<String> deleteSpot(@PathVariable Long id) {
+        scenicSpotService.removeById(id);
+        return Result.success("删除成功");
+    }
+
     /**
      * 热门景区推荐（根据浏览量降序，取前3名）
      */

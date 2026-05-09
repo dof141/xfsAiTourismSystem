@@ -13,48 +13,65 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-//处理预约相关的服务类
+/**
+ * 处理预约相关的服务类
+ */
 @Service
 public class ReserveRecordService extends ServiceImpl<ReserveRecordMapper, ReserveRecord> {
 
     @Autowired
     private TimeSlotMapper timeSlotMapper;
+    
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    // 核心预约逻辑：这里以后可以升级为 Redis 高并发防超卖！
+
+    /**
+     * 核心预约逻辑：支持自动补仓的 Redis 高并发扣减
+     */
     public String doReserve(ReserveRecord record) {
-        // 1. 拼接当前请求对应的 Redis 库存 Key
+        // 1. 拼接 Redis 库存 Key (格式: ticket_stock:日期:时段ID)
         String redisKey = "ticket_stock:" + record.getReserveDate() + ":" + record.getSlotId();
-        //  2. Redis 原子操作扣减库存 (关键点！)
-        // decrement 是单线程原子的，10000 个人同时并发执行，它也会乖乖排队，绝对不会错乱。
-        Long remainStock = stringRedisTemplate.opsForValue().decrement(redisKey);
-        //  3. 判断扣减后的库存
-        if (remainStock == null) {
-            return "该日期的名额尚未开放或已过期！";
+        
+        // 2. 检查 Redis 中是否存在该 Key
+        Boolean hasKey = stringRedisTemplate.hasKey(redisKey);
+        
+        if (Boolean.FALSE.equals(hasKey)) {
+            // 如果没有 Key，说明 Redis 重启了或该日期从未初始化过，去数据库查一下
+            TimeSlot slot = timeSlotMapper.selectById(record.getSlotId());
+            if (slot == null) {
+                return "预约时段不存在！";
+            }
+            // 初始化 Redis 库存（使用 setIfAbsent 保证原子性，防止并发初始化）
+            stringRedisTemplate.opsForValue().setIfAbsent(redisKey, String.valueOf(slot.getMaxPeople()));
+            System.out.println("=== [DEBUG] 自动初始化 Redis 库存: Key=" + redisKey + ", 数量=" + slot.getMaxPeople());
         }
 
-        if (remainStock < 0) {
-            // 如果变成负数，说明刚好卖完了。为了保持数据干净，把 -1 加回 0
+        // 3. 执行原子扣减
+        Long remainStock = stringRedisTemplate.opsForValue().decrement(redisKey);
+        System.out.println("=== [DEBUG] 执行扣减: Key=" + redisKey + ", 剩余=" + remainStock);
+
+        // 4. 判断扣减结果
+        if (remainStock != null && remainStock < 0) {
+            // 如果扣成负数了，说明刚好没票了，把负数加回去保持为 0
             stringRedisTemplate.opsForValue().increment(redisKey);
             return "手慢啦，当前时段名额已被抢空！";
         }
-        // ====== 以下逻辑只有成功抢到 Redis 名额的幸运儿才能执行 ======
 
-
-        // 4. 名额充足，生成订单数据入库
-        // 生成唯一订单号 (XFS + 时间戳 + 随机串)
+        // ====== 5. 扣减成功，执行订单入库逻辑 ======
+        // 如果前端没传 touristId (比如还没做登录)，先默认给 1L 保底，防止数据库报错
+        if (record.getTouristId() == null) {
+            record.setTouristId(1L);
+        }
+        // 生成唯一订单号
         record.setOrderNo("XFS" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 4));
-        record.setTouristId(1L); // TODO: 以后做登录了，这里改成实际的微信游客ID
         record.setStatus(1); // 1 待入园状态
         record.setPayStatus(1); // 默认支付成功
-//      // 为订单号生成二维码
-//        String qrCodeBase64 = QrCodeUtil.generateBase64QrCode(record.getOrderNo());
-//        record.setVerifyCode(qrCodeBase64); // 将二维码base码存入数据库
-        // ====== 工业级短核销码生成 ======
-        // UUID 是全球唯一的，我们截取前 8 位并转为大写，生成类似 "V-A3F8B2C9" 的码
+        
+        // 生成工业级短核销码
         String shortUuid = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         record.setVerifyCode("V-" + shortUuid);
+        
         this.save(record);
-        return "success"; // 成功标志
+        return "success"; 
     }
 }

@@ -3,10 +3,22 @@ import Layout from '../layout/index.vue'
 
 const routes = [
     {
+        path: '/login',
+        name: 'Login',
+        component: () => import('../views/Login.vue'),
+        meta: { title: '管理员登录' }
+    },
+    {
         path: '/',
         component: Layout,
-        redirect: '/area',
+        redirect: '/dashboard',
         children: [
+            {
+                path: 'dashboard',
+                name: 'Dashboard',
+                component: () => import('../views/Dashboard.vue'),
+                meta: { title: '数据统计大屏' }
+            },
             {
                 path: 'area',
                 name: 'Area',
@@ -31,6 +43,20 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+// 核心增强：路由守卫，拦截未登录访问
+router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('xfs_token')
+    if (to.path === '/login') {
+        next()
+    } else {
+        if (!token) {
+            next('/login')
+        } else {
+            next()
+        }
+    }
 })
 
 export default router

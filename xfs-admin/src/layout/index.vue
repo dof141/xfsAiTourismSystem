@@ -37,10 +37,18 @@
         </div>
         <div class="user-profile">
           <div class="info">
-            <span class="name">Admin</span>
-            <span class="role">超级管理员</span>
+            <span class="name">{{ adminName }}</span>
+            <span class="role">{{ adminRole }}</span>
           </div>
           <el-avatar :size="35" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
+          <el-dropdown @command="handleCommand">
+            <el-icon class="logout-icon" :size="18"><SwitchButton /></el-icon>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </header>
 
@@ -57,9 +65,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Monitor, Location, ChatDotRound, Ticket, Expand, Fold } from '@element-plus/icons-vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessageBox } from 'element-plus'
+import { Monitor, Location, ChatDotRound, Ticket, Expand, Fold, SwitchButton } from '@element-plus/icons-vue'
 
+const router = useRouter()
 const isCollapsed = ref(false)
 
 const menuItems = [
@@ -68,6 +79,34 @@ const menuItems = [
   { name: 'AI 助手', path: '/ai', icon: ChatDotRound },
   { name: '核销中心', path: '/verify', icon: Ticket }
 ]
+
+const adminName = computed(() => {
+  try {
+    const info = JSON.parse(localStorage.getItem('admin_info') || '{}')
+    return info.username || 'Admin'
+  } catch { return 'Admin' }
+})
+
+const adminRole = computed(() => {
+  try {
+    const info = JSON.parse(localStorage.getItem('admin_info') || '{}')
+    return info.role === 'SUPER_ADMIN' ? '超级管理员' : '管理员'
+  } catch { return '管理员' }
+})
+
+const handleCommand = (cmd) => {
+  if (cmd === 'logout') {
+    ElMessageBox.confirm('确定退出登录？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      localStorage.removeItem('xfs_token')
+      localStorage.removeItem('admin_info')
+      router.push('/login')
+    }).catch(() => {})
+  }
+}
 </script>
 
 <style scoped>
@@ -210,6 +249,16 @@ const menuItems = [
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.logout-icon {
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.logout-icon:hover {
+  color: #ef4444;
 }
 
 .user-profile .info {

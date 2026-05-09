@@ -65,9 +65,13 @@ const handleLogout = () => {
     content: '确定退出登录吗？',
     success: (res) => {
       if (res.confirm) {
+        // 清除用户专属缓存
+        try {
+          const info = JSON.parse(uni.getStorageSync('tourist_info') || '{}')
+          uni.removeStorageSync('my_reserve_cache_' + (info.touristId || 'guest'))
+        } catch {}
         uni.removeStorageSync('xfs_token')
         uni.removeStorageSync('tourist_info')
-        uni.removeStorageSync('my_reserve_cache')
         uni.showToast({ title: '已退出', icon: 'success' })
         setTimeout(() => {
           uni.reLaunch({ url: '/pages/index/index' })

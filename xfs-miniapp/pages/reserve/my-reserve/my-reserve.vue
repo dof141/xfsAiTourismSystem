@@ -52,13 +52,21 @@ const closeQrPopup = () => {
   fetchMyList()
 }
 
+const getCacheKey = () => {
+  try {
+    const info = JSON.parse(uni.getStorageSync('tourist_info') || '{}')
+    return 'my_reserve_cache_' + (info.touristId || 'guest')
+  } catch { return 'my_reserve_cache_guest' }
+}
+
 const fetchMyList = async (options = {}) => {
   const { showSuccessToast = false } = options
+  const cacheKey = getCacheKey()
 
   if (recordList.value.length === 0) {
-    const cache = uni.getStorageSync('my_reserve_cache')
+    const cache = uni.getStorageSync(cacheKey)
     if (cache) {
-      try { recordList.value = JSON.parse(cache) } catch (e) { uni.removeStorageSync('my_reserve_cache') }
+      try { recordList.value = JSON.parse(cache) } catch (e) { uni.removeStorageSync(cacheKey) }
     }
   }
 
@@ -66,9 +74,10 @@ const fetchMyList = async (options = {}) => {
     const list = await api.myReserveList()
     if (list && list.length > 0) {
       recordList.value = list
-      uni.setStorageSync('my_reserve_cache', JSON.stringify(list))
+      uni.setStorageSync(cacheKey, JSON.stringify(list))
     } else {
-      if (recordList.value.length === 0) {
+      recordList.value = []
+      if (!showSuccessToast) {
         uni.showToast({ title: '暂无预约记录', icon: 'none' })
       }
     }

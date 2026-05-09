@@ -12,7 +12,7 @@
           <el-input 
             v-model="form.username" 
             placeholder="管理员账号" 
-            prefix-icon="User"
+            :prefix-icon="User"
             size="large"
           />
         </el-form-item>
@@ -21,7 +21,7 @@
             v-model="form.password" 
             type="password" 
             placeholder="登录密码" 
-            prefix-icon="Lock"
+            :prefix-icon="Lock"
             size="large"
             show-password
           />
@@ -73,6 +73,7 @@ const handleLogin = async () => {
     }
   } catch (e) {
     console.error(e)
+    ElMessage.error('登录请求失败，请检查网络')
   } finally {
     loading.value = false
   }
@@ -140,7 +141,7 @@ const handleLogin = async () => {
   font-size: 16px;
   background: linear-gradient(135deg, #6366f1, #0ea5e9);
   border: none;
-  box-shadow: 0 8rpx 16rpx rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
   margin-top: 20px;
 }
 

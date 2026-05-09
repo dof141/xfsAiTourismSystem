@@ -37,6 +37,10 @@ const routes = [
                 meta: { title: '二维码核销' }
             }
         ]
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/dashboard'
     }
 ]
 
@@ -45,11 +49,15 @@ const router = createRouter({
     routes
 })
 
-// 核心增强：路由守卫，拦截未登录访问
+// 路由守卫
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('xfs_token')
     if (to.path === '/login') {
-        next()
+        if (token) {
+            next('/dashboard')
+        } else {
+            next()
+        }
     } else {
         if (!token) {
             next('/login')

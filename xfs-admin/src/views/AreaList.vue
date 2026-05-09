@@ -197,7 +197,8 @@ const fetchSpotList = async () => {
   try {
     const res = await request.get(`/area/${currentArea.value.id}/spots`)
     spotList.value = res.data
-  } finally { spotLoading.value = false }
+  } catch (e) { ElMessage.error('获取景点列表失败') }
+  finally { spotLoading.value = false }
 }
 
 const openSpotDialog = (row = null) => {

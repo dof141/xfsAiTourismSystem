@@ -94,11 +94,12 @@ const fetchCardData = async () => {
     cards.value[0].value = d.todayReserve
     cards.value[1].value = d.totalVisitors
     cards.value[2].value = d.areaCount
-    cards.value[3].value = d.verifyRate.replace('%', '')
+    cards.value[3].value = (d.verifyRate || '0').replace('%', '')
   } catch (e) { ElMessage.error('获取统计数据失败') }
 }
 
 const initCharts = async () => {
+  try {
   // 1. 极简趋势图
   trendChart = echarts.init(trendChartRef.value)
   const trendRes = await request.get('/stats/trend')
@@ -146,15 +147,24 @@ const initCharts = async () => {
       data: heatRes.data
     }]
   })
+  } catch (e) { ElMessage.error('图表加载失败') }
+}
+
+const handleResize = () => {
+  trendChart?.resize()
+  heatChart?.resize()
 }
 
 onMounted(() => {
   fetchCardData()
   initCharts()
-  window.addEventListener('resize', () => {
-    trendChart?.resize()
-    heatChart?.resize()
-  })
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  trendChart?.dispose()
+  heatChart?.dispose()
 })
 </script>
 

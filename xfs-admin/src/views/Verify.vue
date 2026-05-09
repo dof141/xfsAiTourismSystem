@@ -88,12 +88,10 @@ const handleVerify = async () => {
     verifyResult.value = { type: 'success', title: '核销成功', msg: '订单已验证，准予入园' }
     ElMessage.success('核销成功')
   } catch (error) {
-    if (error.response && error.response.data) {
-        verifyResult.value = { type: 'error', title: '核销失败', msg: error.response.data.msg }
-    }
+    const msg = error?.response?.data?.msg || error?.msg || '核销请求失败'
+    verifyResult.value = { type: 'error', title: '核销失败', msg }
   } finally {
     loading.value = false
-    scanOrderNo.value = ''
   }
 }
 </script>

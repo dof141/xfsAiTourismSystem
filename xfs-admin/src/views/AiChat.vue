@@ -23,7 +23,7 @@
             <span class="name">雪峰百事通 (AI 引擎)</span>
           </div>
           <div class="actions">
-            <el-button link :icon="Delete">清空记录</el-button>
+            <el-button link :icon="Delete" @click="clearMessages">清空记录</el-button>
           </div>
         </div>
 
@@ -81,6 +81,12 @@ const scrollToBottom = async () => {
   }
 }
 
+const clearMessages = () => {
+  messageList.value = [
+    { role: 'ai', content: '您好！我是雪峰山专属导览助手，很高兴为您服务。请问有什么可以帮您的吗？' }
+  ]
+}
+
 const sendMessage = async () => {
   const text = inputText.value.trim()
   if (!text) return
@@ -95,6 +101,7 @@ const sendMessage = async () => {
     messageList.value.push({ role: 'ai', content: res.data })
   } catch (error) {
     console.error(error)
+    messageList.value.push({ role: 'ai', content: '抱歉，服务暂时不可用，请稍后重试' })
   } finally {
     loading.value = false
     scrollToBottom()

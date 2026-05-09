@@ -6,9 +6,9 @@
       <view class="hero-mask"></view>
       <view class="hero-content">
         <text class="area-level">{{ areaData.level }}景区</text>
-        <h1 class="area-name">{{ areaData.name }}</h1>
+        <text class="area-name">{{ areaData.name }}</text>
         <view class="address-box">
-          <el-icon><Location /></el-icon>
+          <text class="location-icon">📍</text>
           <text>{{ areaData.address }}</text>
         </view>
       </view>
@@ -209,6 +209,10 @@ page {
       font-size: 26rpx;
       opacity: 0.9;
       gap: 8rpx;
+
+      .location-icon {
+        font-size: 28rpx;
+      }
     }
   }
 }

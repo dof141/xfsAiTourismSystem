@@ -76,7 +76,7 @@
 
 	const promptLoginDirect = () => {
 	  uni.showModal({
-	    title: '极简登录',
+	    title: '手机号登录',
 	    editable: true,
 	    placeholderText: '请输入11位手机号',
 	    success: async (res) => {
@@ -87,15 +87,35 @@
           return
         }
         try {
-          const loginRes = await api.touristLogin(phone)
-          uni.setStorageSync('xfs_token', loginRes.token)
-          uni.setStorageSync('tourist_info', JSON.stringify(loginRes))
-          uni.showToast({ title: '登录成功' })
-          setTimeout(() => {
-            uni.navigateTo({ url: '/pages/profile/profile' })
-          }, 1000)
+          const sendMsg = await api.touristSendCode(phone)
+          uni.showModal({
+            title: '输入验证码',
+            content: sendMsg,
+            editable: true,
+            placeholderText: '请输入6位验证码',
+            success: async (codeRes) => {
+              if (codeRes.confirm && codeRes.content) {
+                const code = codeRes.content.trim()
+                if (!/^\d{6}$/.test(code)) {
+                  uni.showToast({ title: '请输入6位验证码', icon: 'none' })
+                  return
+                }
+                try {
+                  const loginRes = await api.touristLogin(phone, code)
+                  uni.setStorageSync('xfs_token', loginRes.token)
+                  uni.setStorageSync('tourist_info', JSON.stringify(loginRes))
+                  uni.showToast({ title: '登录成功' })
+                  setTimeout(() => {
+                    uni.navigateTo({ url: '/pages/profile/profile' })
+                  }, 1000)
+                } catch (e) {
+                  uni.showToast({ title: '验证码错误或已过期', icon: 'none' })
+                }
+              }
+            }
+          })
         } catch (e) {
-          uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+          uni.showToast({ title: '验证码发送失败，请重试', icon: 'none' })
         }
 	      }
 	    }

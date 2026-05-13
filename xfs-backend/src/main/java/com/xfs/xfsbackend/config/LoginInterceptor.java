@@ -10,6 +10,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * 登录认证拦截器。
+ * 负责解析 Authorization 请求头中的 JWT，并把用户 id 和角色写入 request 属性供后续业务使用。
+ */
 @Slf4j
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
@@ -17,6 +21,10 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
     private JwtUtils jwtUtils;
 
+    /**
+     * 在接口执行前校验登录态。
+     * OPTIONS 预检请求直接放行；有效 JWT 放行；无 token 或 token 无效则返回 401。
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {

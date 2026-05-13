@@ -83,5 +83,6 @@ export const api = {
   spotListByArea: (areaId) => get(`/api/area/${areaId}/spots`),
 
   // 游客登录
-  touristLogin: (phone) => post('/api/tourist/login', { phone }),
+  touristSendCode: (phone) => post('/api/tourist/sendCode', { phone }),
+  touristLogin: (phone, code) => post('/api/tourist/login', { phone, code }),
 }

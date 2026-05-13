@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import java.util.Date;
 
-//景区类
+/**
+ * 大景区实体。
+ * 对应 scenic_area 表，保存景区名称、简介、地址、等级、封面图、状态和统计字段。
+ */
 @Data
 public class ScenicArea {
     @TableId(type = IdType.AUTO)

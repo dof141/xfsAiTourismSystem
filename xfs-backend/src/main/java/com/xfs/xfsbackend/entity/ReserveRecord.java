@@ -8,7 +8,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
 
-//预约类
+/**
+ * 预约订单实体。
+ * 对应 reserve_record 表，保存游客预约景区、预约日期、入园时段、支付状态、核销码和订单状态。
+ */
 @Data
 public class ReserveRecord {
     @TableId(type = IdType.AUTO)

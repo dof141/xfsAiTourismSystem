@@ -2,6 +2,7 @@ package com.xfs.xfsbackend;
 
 import com.xfs.xfsbackend.entity.ScenicArea;
 import com.xfs.xfsbackend.entity.ScenicSpot;
+import com.xfs.xfsbackend.utils.JwtUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,6 +25,9 @@ public class ScenicCrudApiTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JwtUtils jwtUtils;
+
     @Test
     void testScenicAreaAndSpotLifecycle() throws Exception {
         // 1. 测试新增大景区
@@ -34,6 +38,7 @@ public class ScenicCrudApiTest {
 
         String areaJson = objectMapper.writeValueAsString(area);
         mockMvc.perform(post("/api/area/save")
+                .header("Authorization", "Bearer " + adminToken())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(areaJson))
                 .andExpect(status().isOk())
@@ -53,9 +58,14 @@ public class ScenicCrudApiTest {
 
         String spotJson = objectMapper.writeValueAsString(spot);
         mockMvc.perform(post("/api/area/spot/save")
+                .header("Authorization", "Bearer " + adminToken())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(spotJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
+    }
+
+    private String adminToken() {
+        return jwtUtils.generateToken(1L, "admin", "admin");
     }
 }

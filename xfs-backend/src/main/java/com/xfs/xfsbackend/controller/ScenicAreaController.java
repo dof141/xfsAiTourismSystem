@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//景点相关的控制器
+/**
+ * 景区与子景点管理控制器。
+ * 对游客提供景区列表、热门景区、子景点查询；对管理员提供景区和子景点维护接口。
+ */
 @RestController
 @RequestMapping("/api/area")
 public class ScenicAreaController {
@@ -24,7 +27,8 @@ public class ScenicAreaController {
     private ScenicSpotService scenicSpotService;
 
     /**
-     * 返回所有的景点信息
+     * 获取所有大景区列表。
+     * 游客端首页和管理后台景区表格都使用该接口。
      */
     @GetMapping("/list")
     public Result<List<ScenicArea>> getAreaList() {
@@ -32,7 +36,8 @@ public class ScenicAreaController {
     }
 
     /**
-     * 保存或更新景区
+     * 新增或更新大景区信息。
+     * 需要管理员权限，前端编辑景区基础资料时调用。
      */
     @AdminRequired
     @PostMapping("/save")
@@ -42,7 +47,8 @@ public class ScenicAreaController {
     }
 
     /**
-     * 删除景区
+     * 删除指定大景区。
+     * 需要管理员权限，当前为物理删除，后续可按需要改为状态下架。
      */
     @AdminRequired
     @DeleteMapping("/{id}")
@@ -52,7 +58,8 @@ public class ScenicAreaController {
     }
 
     /**
-     * 获取指定景区下的所有子景点
+     * 获取指定大景区下的子景点列表。
+     * 游客查看景区详情和后台管理子景点时都会调用。
      */
     @GetMapping("/{id}/spots")
     public Result<List<ScenicSpot>> getSpotsByArea(@PathVariable Long id) {
@@ -63,7 +70,8 @@ public class ScenicAreaController {
     }
     
     /**
-     * 保存或更新子景点
+     * 新增或更新子景点信息。
+     * 需要管理员权限，用于维护景区内部景点、价格、开放时间和图片。
      */
     @AdminRequired
     @PostMapping("/spot/save")
@@ -73,7 +81,8 @@ public class ScenicAreaController {
     }
 
     /**
-     * 删除子景点
+     * 删除指定子景点。
+     * 需要管理员权限，当前为物理删除。
      */
     @AdminRequired
     @DeleteMapping("/spot/{id}")
@@ -83,9 +92,9 @@ public class ScenicAreaController {
     }
 
     /**
-     * 热门景区推荐（根据浏览量降序，取前3名）
+     * 热门景区推荐接口。
+     * 根据浏览量倒序取前 3 个景区，用于游客端首页热门推荐区域。
      */
-
     @GetMapping("/hot")
     public Result<List<ScenicArea>> getHotList() {
         QueryWrapper<ScenicArea> queryWrapper = new QueryWrapper<>();

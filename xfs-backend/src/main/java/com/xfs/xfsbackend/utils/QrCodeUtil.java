@@ -8,9 +8,16 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 
+/**
+ * 二维码生成工具类。
+ * 将订单号或核销码转换成前端可直接展示的 Base64 PNG 图片。
+ */
 public class QrCodeUtil {
 
-    // 传入一段文字（比如订单号），返回网页可以直接显示的 Base64 图片字符串
+    /**
+     * 根据文本内容生成二维码图片。
+     * 返回值包含 data:image/png;base64 前缀，前端可直接放入 image/img 的 src 属性。
+     */
     public static String generateBase64QrCode(String content) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();

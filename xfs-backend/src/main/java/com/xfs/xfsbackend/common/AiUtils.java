@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * AI 导游工具类
- * 已接入真实大模型接口 (OpenAI 兼容协议)
+ * AI 导游工具类。
+ * 负责组装系统提示词、对话历史和用户问题，并调用 OpenAI 兼容格式的大模型接口生成导览回答。
  */
 @Slf4j
 @Component
@@ -41,10 +41,20 @@ public class AiUtils {
             "要求：语气亲切、热情、专业。如果用户的问题与旅游或雪峰山完全无关，请礼貌地引导用户回到旅游话题。";
 
     /**
-     * 调用大模型接口 (支持多轮对话)
-     * @param question 用户的提问
-     * @param history 对话历史（可为null）
-     * @return AI 的回答
+     * 调用大模型接口，不携带对话历史。
+     * 适用于单轮问答或前端没有保存历史消息的场景。
+     */
+    public String getAiAnswer(String question) {
+        return getAiAnswer(question, null);
+    }
+
+    /**
+     * 调用大模型接口，支持多轮对话。
+     * 会将系统人设、最近的对话历史和当前问题一起发送给大模型。
+     *
+     * @param question 用户当前提问
+     * @param history 前端传入的历史对话，可为空
+     * @return AI 导游回答文本
      */
     public String getAiAnswer(String question, List<QuestionDTO.ChatMessage> history) {
         log.info("开始调用 AI 接口，提问内容: {}", question);
@@ -55,8 +65,8 @@ public class AiUtils {
         }
 
         // 输入长度限制
-        if (question.length() > 500) {
-            return "问题太长啦，请精简到500字以内。";
+        if (question.length() > 200) {
+            return "问题太长啦，请精简到200字以内。";
         }
 
         try {

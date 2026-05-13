@@ -49,9 +49,11 @@ mybatis-plus:
 # AI 大模型配置 (推荐使用 DeepSeek 或通义千问)
 xfs:
   ai:
-    api-key: ${AI_API_KEY} # 建议通过环境变量注入${AI_API_KEY:你的apikey}
+    api-key: ${AI_API_KEY:your-real-key} # 建议通过环境变量注入${AI_API_KEY:你的apikey}
     api-url: https://api.deepseek.com/chat/completions # DeepSeek 标准接口地址
     model: deepseek-chat
+  sms:
+    mock-enabled: true
   # JWT 安全配置
   jwt:
     secret: ${JWT_SECRET:XFS_SECRET_2026_GRADUATION_PROJECT_DEFAULT}

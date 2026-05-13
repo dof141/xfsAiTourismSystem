@@ -5,6 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import java.util.Date;
 
+/**
+ * 游客用户实体。
+ * 对应 tourist_user 表，保存小程序游客的 openid、昵称、头像、真实姓名和手机号。
+ */
 @Data
 public class TouristUser {
     @TableId(type = IdType.AUTO)

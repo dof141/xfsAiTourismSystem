@@ -7,9 +7,17 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * 管理员角色拦截器。
+ * 只拦截带 @AdminRequired 的接口方法，校验登录拦截器写入 request 的 role 是否为 admin。
+ */
 @Component
 public class AdminRoleInterceptor implements HandlerInterceptor {
 
+    /**
+     * 在 Controller 方法执行前检查管理员权限。
+     * 普通游客访问管理员接口时返回 403，未标记 @AdminRequired 的接口直接放行。
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (!(handler instanceof HandlerMethod)) {

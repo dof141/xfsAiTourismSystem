@@ -6,7 +6,8 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 子景点实体类 - 对应大景区内部的具体游玩点
+ * 子景点实体。
+ * 对应 scenic_spot 表，表示大景区内部的具体游玩点、价格、开放时间和图片信息。
  */
 @Data
 public class ScenicSpot {

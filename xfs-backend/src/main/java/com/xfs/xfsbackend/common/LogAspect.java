@@ -11,11 +11,19 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
+/**
+ * Controller 请求日志切面。
+ * 统一记录接口路径、请求方法、IP、参数和耗时，便于调试和排查接口问题。
+ */
 @Slf4j
 @Aspect
 @Component
 public class LogAspect {
 
+    /**
+     * 环绕所有 controller 方法，记录请求开始到结束的耗时。
+     * 如果接口抛出异常，也会记录异常摘要后继续抛给全局异常处理器。
+     */
     @Around("execution(* com.xfs.xfsbackend.controller.*.*(..))")
     public Object logController(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();

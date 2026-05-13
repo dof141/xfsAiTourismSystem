@@ -16,7 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * 统计分析控制器 - 为后台大屏提供数据
+ * 统计分析控制器。
+ * 为后台数据大屏提供预约数量、核销率、景区热度和最近 7 天预约趋势。
  */
 @RestController
 @RequestMapping("/api/stats")
@@ -32,7 +33,8 @@ public class StatisticsController {
     private static final DateTimeFormatter SHORT_FMT = DateTimeFormatter.ofPattern("MM-dd");
 
     /**
-     * 获取大屏顶部的四个核心指标卡片数据
+     * 获取后台大屏顶部核心指标。
+     * 包括今日预约数、累计核销数、景区总数和今日核销率。
      */
     @AdminRequired
     @GetMapping("/cards")
@@ -71,7 +73,8 @@ public class StatisticsController {
     }
 
     /**
-     * 获取景区热度排行数据 (饼图) — 基于各景区的实际预约量
+     * 获取景区热度排行数据。
+     * 按各景区累计预约量生成饼图数据，供 ECharts 渲染。
      */
     @AdminRequired
     @GetMapping("/areaHeat")
@@ -92,7 +95,8 @@ public class StatisticsController {
     }
 
     /**
-     * 获取最近7天的预约趋势 (折线图) — 基于真实预约数据
+     * 获取最近 7 天预约趋势。
+     * 返回日期数组和预约量数组，供后台折线图展示。
      */
     @AdminRequired
     @GetMapping("/trend")

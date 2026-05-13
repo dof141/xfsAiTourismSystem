@@ -1,0 +1,17 @@
+#上线后使用的yml配置 不回显验证码，不明文密码
+spring:
+  datasource:
+    password: ${DB_PASSWORD}
+    druid:
+      stat-view-servlet:
+        enabled: false
+  redis:
+    password: ${REDIS_PASSWORD:}
+
+xfs:
+  ai:
+    api-key: ${AI_API_KEY}
+  sms:
+    mock-enabled: false
+  jwt:
+    secret: ${JWT_SECRET}
